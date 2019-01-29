@@ -1,6 +1,6 @@
 import os
 import unittest
-import vtk, qt, ctk, slicer
+import vtk, qt, ctk, slicer, numpy
 from slicer.ScriptedLoadableModule import *
 import logging
 
@@ -15,10 +15,10 @@ class RawImageGuessModule(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "Raw Image Guess Module" # TODO make this more human readable by adding spaces
+    self.parent.title = "Raw Image Guess Module" 
     self.parent.categories = ["Informatics"]
     self.parent.dependencies = []
-    self.parent.contributors = ["Attila Nagy (University of Szeged, Szeged, Hungary)", "Csaba Pinter (Queens's University, Kingston, Ontario, Canada)", "Andras Lasso (Queens's University, Kingston, Ontario, Canada)", "Steve Pieper (Isomics Inc., Cambridge, MA, USA)" ] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Attila Nagy (University of Szeged, Szeged, Hungary)", "Csaba Pinter (Queens's University, Kingston, Ontario, Canada)", "Andras Lasso (Queens's University, Kingston, Ontario, Canada)", "Steve Pieper (Isomics Inc., Cambridge, MA, USA)" ]
     self.parent.helpText = """
 This is an example of scripted loadable module bundled in an extension.
 It performs a simple thresholding on the input volume and optionally captures a screenshot.
@@ -69,6 +69,7 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     self.inputFileSelector.filters = ctk.ctkPathLineEdit.Files
     self.inputFileSelector.settingKey = 'RawImageGuessInputFile'
     loadImageFormLayout.addRow("Choose the file:", self.inputFileSelector)
+    #logging.warning (self.inputFileSelector.currentPath)
     
     # Choose image parameters
     
@@ -122,7 +123,7 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     operationLayout.addWidget(self.RadioButton32BitSigned,1,1)
     operationLayout.addWidget(self.RadioButton32BitUnSigned,2,1)
 
-    self.operationRadioButtons[0].setChecked(True)
+    self.operationRadioButtons[0].setChecked(False)
 
     parametersGridLayout.addLayout(operationLayout, 0, 0, 1, 2)
 
@@ -133,78 +134,184 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     for operationRadioButton in self.operationRadioButtons:
       operationRadioButton.connect('toggled(bool)',
       lambda toggle, operationName=self.widgetToOperationNameMap[operationRadioButton]: self.onOperationSelectionChanged(operationName, toggle))
+    """
+    self.widgetToOperationNameMap = {}
 
+    self.radioButtonascii = qt.QRadioButton("ASCII")
+    self.radioButtonascii.setToolTip(
+      "Choose this option to display the header as 8 bit ASCII text.")
+    self.operationRadioButtonsOther.append(self.radioButtonascii)
+    self.widgetToOperationNameMap[self.radioButtonascii] = BTN_ASCII
 
-    # self.minimumSizeSpinBox.connect('valueChanged(int)', self.updateMRMLFromGUI)
-    # self.applyButton.connect('clicked()', self.onApply)
-  
+    self.RadioButtonutf8 = qt.QRadioButton("UTF-8")
+    self.RadioButtonutf8.setToolTip(
+      "Choose this option to display the header as UTF-8 text.")
+    self.operationRadioButtonsOther.append(self.RadioButtonutf8)
+    self.widgetToOperationNameMap[self.RadioButtonutf8] = BTN_UTF8
+    
+    self.operationRadioButtonsOther[0].setChecked(True)
+
+    parametersGridLayout.addLayout(operationLayout, 0, 2)
+    
+    for operationRadioButton in self.operationRadioButtons:
+      operationRadioButton.connect('toggled(bool)',
+      lambda toggle, operationName=self.widgetToOperationNameMap[operationRadioButtonOther]: self.onOperationSelectionChanged(operationName, toggle))
+    """
+    
     #
     # Image X and Y values
     #
+    # TODO: connect the sliders so that the product always equals the number of pixels in the image.
+    #
 
-    self.imageThresholdSliderWidgetX = ctk.ctkSliderWidget()
-    self.imageThresholdSliderWidgetX.singleStep = 1
-    self.imageThresholdSliderWidgetX.minimum = 1
-    self.imageThresholdSliderWidgetX.maximum = 4000
-    self.imageThresholdSliderWidgetX.value = 1
-    self.imageThresholdSliderWidgetX.setToolTip("Set the X value for the image")
+    self.ImageDimensionSliderWidgetX = ctk.ctkSliderWidget()
+    self.ImageDimensionSliderWidgetX.decimals = 0
+    self.ImageDimensionSliderWidgetX.singleStep = 1
+    self.ImageDimensionSliderWidgetX.minimum = 1
+    self.ImageDimensionSliderWidgetX.maximum = 10000
+    self.ImageDimensionSliderWidgetX.value = 1
+    #self.ImageDimensionSliderWidgetX.spinBoxVisible = False
+    self.ImageDimensionSliderWidgetX.setToolTip("Set the X value for the image")
     parametersGridLayout.addWidget(qt.QLabel("X resolution: "), 1, 0)
-    parametersGridLayout.addWidget(self.imageThresholdSliderWidgetX, 1, 1)
-
-    self.imageThresholdSliderWidgetY = ctk.ctkSliderWidget()
-    self.imageThresholdSliderWidgetY.singleStep = 1
-    self.imageThresholdSliderWidgetY.minimum = 1
-    self.imageThresholdSliderWidgetY.maximum = 4000
-    self.imageThresholdSliderWidgetY.value = 1
-    self.imageThresholdSliderWidgetY.setToolTip("Set the Y value for the image")
-    parametersGridLayout.addWidget(qt.QLabel("Y resolution: "), 2, 0)
-    parametersGridLayout.addWidget(self.imageThresholdSliderWidgetY, 2, 1)
-        
+    parametersGridLayout.addWidget(self.ImageDimensionSliderWidgetX, 1, 1)
     
-    #
-    # check box to trigger taking screen shots for later use in tutorials
-    #
-   
+    self.ImageDimensionSliderWidgetY = ctk.ctkSliderWidget()
+    self.ImageDimensionSliderWidgetY.decimals = 0
+    self.ImageDimensionSliderWidgetY.singleStep = 1
+    self.ImageDimensionSliderWidgetY.minimum = 1
+    self.ImageDimensionSliderWidgetY.maximum = 10000
+    self.ImageDimensionSliderWidgetY.value = 1
+    #self.ImageDimensionSliderWidgetY.spinBoxVisible = False    
+    self.ImageDimensionSliderWidgetY.setToolTip("Set the Y value for the image")
+    parametersGridLayout.addWidget(qt.QLabel("Y resolution: "), 2, 0)
+    parametersGridLayout.addWidget(self.ImageDimensionSliderWidgetY, 2, 1)
+
+    self.ImageDimensionSliderWidgetX.connect('valueChanged(double)', self.CalculateCorrespondingYValue)
+    self.ImageDimensionSliderWidgetY.connect('valueChanged(double)', self.CalculateCorrespondingXValue)
+       
+    self.SkipHeaderBytesNum = qt.QSpinBox()
+    parametersGridLayout.addWidget(qt.QLabel("How many bytes to skip: "), 3, 0)
+    parametersGridLayout.addWidget(self.SkipHeaderBytesNum, 3, 1)
+    
     self.ShowFileContents = qt.QPlainTextEdit()
     self.ShowFileContents.placeholderText = ("Placeholder")
     self.ShowFileContents.readOnly = True
-    parametersGridLayout.addWidget(qt.QLabel("The first 100 bytes of the file"), 3, 0)
-    parametersGridLayout.addWidget(self.ShowFileContents, 3, 1)
+    parametersGridLayout.addWidget(qt.QLabel("The first 100 bytes of the file, displayed as:"), 4, 0)
+    parametersGridLayout.addWidget(self.ShowFileContents, 4, 1)
 
+    """  
+    self.operationRadioButtonsOther = []
+    self.widgetToOperationNameMap_2 = {}
+
+    self.radioButtonascii = qt.QRadioButton("ASCII")
+    self.radioButtonascii.setToolTip(
+      "Choose this option to display the header as 8 bit ASCII text.")
+    self.operationRadioButtonsOther.append(self.radioButtonascii)
+    self.widgetToOperationNameMap_2[self.radioButtonascii] = BTN_ASCII
+
+    self.RadioButtonutf8 = qt.QRadioButton("UTF-8")
+    self.RadioButtonutf8.setToolTip(
+      "Choose this option to display the header as UTF-8 text.")
+    self.operationRadioButtonsOther.append(self.RadioButtonutf8)
+    self.widgetToOperationNameMap_2[self.RadioButtonutf8] = BTN_UTF8
+    
+    operationLayout = qt.QGridLayout()
+    operationLayout.addWidget(self.radioButtonascii,1,0)
+    operationLayout.addWidget(self.RadioButtonutf8,0,1)
+    
+    for operationRadioButtonsOther in self.operationRadioButtons:
+      operationRadioButtonsOther.connect('toggled(bool)',
+      lambda toggle, operationName=self.widgetToOperationNameMap_2[operationRadioButtonsOther]: self.onOperationSelectionChanged_BITNESS(operationName, toggle))
+    """      
+    """
+  def onOperationSelectionChanged_BITNESS(self, operationName, toggle):
+    # logging.warning("ZZZ 2 " + str(widget) + ' ' + str(toggle))
+    # operationName = self.widgetToOperationNameMap[widget]
+    if not toggle:
+      return
+    logging.warning("ZZZ hmmm")
+    if operationName == BTN_ASCII:
+      logging.warning("BTN_ASCII")
+
+    if operationName == BTN_UTF8:
+      logging.warning("BTN_UTF8")  
+    """
     self.enableScreenshotsFlagCheckBox = qt.QCheckBox()
     self.enableScreenshotsFlagCheckBox.checked = 0
     self.enableScreenshotsFlagCheckBox.setToolTip("If checked, take screen shots for tutorials. Use Save Data to write them to disk.")
-    parametersGridLayout.addWidget(qt.QLabel("Enable screenshots: "), 4, 0)
-    parametersGridLayout.addWidget(self.enableScreenshotsFlagCheckBox, 4, 1)
-    
+    parametersGridLayout.addWidget(qt.QLabel("Enable screenshots: "), 5, 0)
+    parametersGridLayout.addWidget(self.enableScreenshotsFlagCheckBox, 5, 1)
+  
   def cleanup(self):
     pass
 
   def onSelect(self):
     #self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
     pass
-
+    
+  #TODO Consider endianness
+      
   def onOperationSelectionChanged(self, operationName, toggle):
     # logging.warning("ZZZ 2 " + str(widget) + ' ' + str(toggle))
     # operationName = self.widgetToOperationNameMap[widget]
     if not toggle:
       return
-    logging.warning("ZZZ 4")
+    logging.warning(".")
     if operationName == BITS_8:
-      #something here
-      logging.warning("ZZZ 8")
+      self.RawDataArray = numpy.fromfile(self.inputFileSelector.currentPath, dtype='B')
+      logging.warning("8 bits")
+      print self.RawDataArray
+      print self.RawDataArray.size
+      #array[:] = a
+      #volumeNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLScalarVolumeNode')
+      #volumeNode.CreateDefaultDisplayNodes()
+      #id = vtk.vtkImageData()
+      #id.SetDimensions(2000,1500,0)
+      ##id.SetScalarTypeAsString(map[dtype])
+      #id.AllocateScalars(1, 1)
+      #volumeNode.SetAndObserveImageData(id)
+      #array[:] = a
+      #array = array(node.GetID())
+      
+      #logging.warning (self.inputFileSelector.currentPath)
+      #logging.warning (self.SkipHeaderBytesNum.value)
+      #logging.warning (self.ImageDimensionSliderWidgetX.value)
+      #logging.warning (self.ImageDimensionSliderWidgetY.value)
     if operationName == BITS_UNSIGNED_16:
       #something here
-      logging.warning("ZZZ U16")
+      self.RawDataArray = numpy.fromfile(self.inputFileSelector.currentPath, dtype='i')
+      logging.warning("16 bits unsigned")
+      print self.RawDataArray
+      print self.RawDataArray.size
     if operationName == BITS_SIGNED_16:
-      #something here
-      logging.warning("ZZZ S16")
+      self.RawDataArray = numpy.fromfile(self.inputFileSelector.currentPath, dtype='b')
+      logging.warning("16 bits signed")
+      print self.RawDataArray
+      print self.RawDataArray.size
     if operationName == BITS_SIGNED_32:
-      #something here
-      logging.warning("ZZZ S32")
+      self.RawDataArray = numpy.fromfile(self.inputFileSelector.currentPath, dtype='f')
+      logging.warning("32 bits signed")
+      print self.RawDataArray
+      print self.RawDataArray.size
     if operationName == BITS_UNSIGNED_32:
-      #something here
-      logging.warning("ZZZ U32")
+      self.RawDataArray = numpy.fromfile(self.inputFileSelector.currentPath, dtype='c')
+      logging.warning("32 bits unsigned")
+      print self.RawDataArray
+      print self.RawDataArray.size
+
+  #TODO: correct the X*Y value with the value of the header (the skipped bytes)
+      
+  def CalculateCorrespondingXValue(self, value):
+    self.ImageDimensionSliderWidgetX.blockSignals(True)
+    self.ImageDimensionSliderWidgetX.value = self.RawDataArray.size / self.ImageDimensionSliderWidgetY.value
+      # if self.ImageDimensionSliderWidgetX.value < self.RawDataArray.size/ self.ImageDimensionSliderWidgetY.value
+      # self.ImageDimensionSliderWidgetX.value = 
+    self.ImageDimensionSliderWidgetX.blockSignals(False)
+  
+  def CalculateCorrespondingYValue(self, value):
+    self.ImageDimensionSliderWidgetY.blockSignals(True)
+    self.ImageDimensionSliderWidgetY.value = self.RawDataArray.size / self.ImageDimensionSliderWidgetX.value
+    self.ImageDimensionSliderWidgetY.blockSignals(False)
 
   def onApplyButton(self):
     logic = RawImageGuessModuleLogic()
@@ -212,6 +319,8 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     imageThreshold = self.imageThresholdSliderWidget.value
     logic.run(self.inputSelector.currentNode(), self.outputSelector.currentNode(), imageThreshold, enableScreenshotsFlag)
 
+    
+    
 #
 # RawImageGuessModuleLogic
 #
@@ -225,7 +334,7 @@ class RawImageGuessModuleLogic(ScriptedLoadableModuleLogic):
   Uses ScriptedLoadableModuleLogic base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
-  
+    
   def takeScreenshot(self,name,description,type=-1):
     # show the message even if not taking a screen shot
     slicer.util.delayDisplay('Take screenshot: '+description+'.\nResult is available in the Annotations module.', 3000)
@@ -262,21 +371,18 @@ class RawImageGuessModuleLogic(ScriptedLoadableModuleLogic):
     annotationLogic = slicer.modules.annotations.logic()
     annotationLogic.CreateSnapShot(name, description, type, 1, imageData)
 
-  def run(self, inputVolume, outputVolume, imageThreshold, enableScreenshots=0):
+  def run(self, enableScreenshots=0):
     """
     Run the actual algorithm
     """
-
-    if not self.isValidInputOutputData(inputVolume, outputVolume):
-      slicer.util.errorDisplay('Input volume is the same as output volume. Choose a different output volume.')
-      return False
-
-    logging.info('Processing started')
-
-    # Compute the thresholded output volume using the Threshold Scalar Volume CLI module
-    cliParams = {'InputVolume': inputVolume.GetID(), 'OutputVolume': outputVolume.GetID(), 'ThresholdValue' : imageThreshold, 'ThresholdType' : 'Above'}
-    cliNode = slicer.cli.run(slicer.modules.thresholdscalarvolume, None, cliParams, wait_for_completion=True)
-
+    array[:] = a
+    id = vtk.vtkImageData()
+    id.SetDimensions(self.ImageDimensionSliderWidgetX.value,self.ImageDimensionSliderWidgetY.value,0)
+    id.SetScalartypeAsString(map[dtype])
+    id.AllocateScalars
+    node.SetAndObserveImageData(id)
+    array = array(node.GetID())
+    
     # Capture screenshot
     if enableScreenshots:
       self.takeScreenshot('RawImageGuessModuleTest-Start','MyScreenshot',-1)
