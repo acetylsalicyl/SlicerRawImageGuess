@@ -3,6 +3,7 @@ import unittest
 import vtk, qt, ctk, slicer, numpy
 from slicer.ScriptedLoadableModule import *
 import logging
+import math
 
 #
 # RawImageGuessModule
@@ -15,10 +16,10 @@ class RawImageGuessModule(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "Raw Image Guess Module" 
+    self.parent.title = "Raw Image Guess Module" # TODO make this more human readable by adding spaces
     self.parent.categories = ["Informatics"]
     self.parent.dependencies = []
-    self.parent.contributors = ["Attila Nagy (University of Szeged, Szeged, Hungary)", "Csaba Pinter (Queens's University, Kingston, Ontario, Canada)", "Andras Lasso (Queens's University, Kingston, Ontario, Canada)", "Steve Pieper (Isomics Inc., Cambridge, MA, USA)" ]
+    self.parent.contributors = ["Attila Nagy (University of Szeged, Szeged, Hungary)", "Csaba Pinter (Queens's University, Kingston, Ontario, Canada)", "Andras Lasso (Queens's University, Kingston, Ontario, Canada)", "Steve Pieper (Isomics Inc., Cambridge, MA, USA)" ] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
 This is an example of scripted loadable module bundled in an extension.
 It performs a simple thresholding on the input volume and optionally captures a screenshot.
@@ -69,7 +70,9 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     self.inputFileSelector.filters = ctk.ctkPathLineEdit.Files
     self.inputFileSelector.settingKey = 'RawImageGuessInputFile'
     loadImageFormLayout.addRow("Choose the file:", self.inputFileSelector)
-    #logging.warning (self.inputFileSelector.currentPath)
+    # logging.warning (self.inputFileSelector.currentPath)
+    print "File selector setup done" #self.inputFileSelector.currentPath
+    #FileSizeOnDisk = os.path.getsize(self.inputFileSelector.currentPath)
     
     # Choose image parameters
     
@@ -162,13 +165,14 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     # Image X and Y values
     #
     # TODO: connect the sliders so that the product always equals the number of pixels in the image.
-    #
+    # -- DONE --
+    # Also added slider for 3rd dimension
 
     self.ImageDimensionSliderWidgetX = ctk.ctkSliderWidget()
     self.ImageDimensionSliderWidgetX.decimals = 0
     self.ImageDimensionSliderWidgetX.singleStep = 1
     self.ImageDimensionSliderWidgetX.minimum = 1
-    self.ImageDimensionSliderWidgetX.maximum = 10000
+    self.ImageDimensionSliderWidgetX.maximum = 1 #will be file the data in bytes later once the file loaded
     self.ImageDimensionSliderWidgetX.value = 1
     #self.ImageDimensionSliderWidgetX.spinBoxVisible = False
     self.ImageDimensionSliderWidgetX.setToolTip("Set the X value for the image")
@@ -179,25 +183,49 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     self.ImageDimensionSliderWidgetY.decimals = 0
     self.ImageDimensionSliderWidgetY.singleStep = 1
     self.ImageDimensionSliderWidgetY.minimum = 1
-    self.ImageDimensionSliderWidgetY.maximum = 10000
+    self.ImageDimensionSliderWidgetY.maximum = 1 #will be the data in bytes later once the file loaded
     self.ImageDimensionSliderWidgetY.value = 1
     #self.ImageDimensionSliderWidgetY.spinBoxVisible = False    
     self.ImageDimensionSliderWidgetY.setToolTip("Set the Y value for the image")
     parametersGridLayout.addWidget(qt.QLabel("Y resolution: "), 2, 0)
     parametersGridLayout.addWidget(self.ImageDimensionSliderWidgetY, 2, 1)
 
-    self.ImageDimensionSliderWidgetX.connect('valueChanged(double)', self.CalculateCorrespondingYValue)
-    self.ImageDimensionSliderWidgetY.connect('valueChanged(double)', self.CalculateCorrespondingXValue)
-       
+    self.ImageDimensionSliderWidgetZ = ctk.ctkSliderWidget()
+    self.ImageDimensionSliderWidgetZ.decimals = 0
+    self.ImageDimensionSliderWidgetZ.singleStep = 1
+    self.ImageDimensionSliderWidgetZ.minimum = 1
+    self.ImageDimensionSliderWidgetZ.maximum = 1 #will be the data in bytes later once the file loaded
+    #self.ImageDimensionSliderWidgetZ.value = 1
+    #self.ImageDimensionSliderWidgetX.spinBoxVisible = False
+    self.ImageDimensionSliderWidgetZ.setToolTip("Set the number of slices the image may consist of")
+    parametersGridLayout.addWidget(qt.QLabel("Number of slices: "), 3, 0)
+    parametersGridLayout.addWidget(self.ImageDimensionSliderWidgetZ, 3, 1)
+
+
+
+    # self.FileSizeOnDisk = os.path.getsize(self.inputFileSelector.currentPath)
+    # print self.FileSizeOnDisk
+
+#    self.ImageDimensionSliderWidgetX.maximum = self.FileSizeOnDisk
+#    self.ImageDimensionSliderWidgetY.maximum = self.FileSizeOnDisk       
+                                                         
     self.SkipHeaderBytesNum = qt.QSpinBox()
-    parametersGridLayout.addWidget(qt.QLabel("How many bytes to skip: "), 3, 0)
-    parametersGridLayout.addWidget(self.SkipHeaderBytesNum, 3, 1)
+    parametersGridLayout.addWidget(qt.QLabel("How many bytes to skip: "), 4, 0)
+    parametersGridLayout.addWidget(self.SkipHeaderBytesNum, 4, 1)
     
     self.ShowFileContents = qt.QPlainTextEdit()
     self.ShowFileContents.placeholderText = ("Placeholder")
     self.ShowFileContents.readOnly = True
-    parametersGridLayout.addWidget(qt.QLabel("The first 100 bytes of the file, displayed as:"), 4, 0)
-    parametersGridLayout.addWidget(self.ShowFileContents, 4, 1)
+    parametersGridLayout.addWidget(qt.QLabel("The first 100 bytes of the file, displayed as:"), 5, 0)
+    parametersGridLayout.addWidget(self.ShowFileContents, 5, 1)
+
+
+    self.ImageDimensionSliderWidgetX.connect('valueChanged(double)', self.CalculateCorrespondingYValue)
+    self.ImageDimensionSliderWidgetY.connect('valueChanged(double)', self.CalculateCorrespondingXValue)
+    self.ImageDimensionSliderWidgetZ.connect('valueChanged(double)', self.CalculateCorrespondingZValue)
+    self.inputFileSelector.connect('currentPathChanged(QString)', self.inputFileSelector.currentPath)
+    
+    # self.ShowFileContents.connect( 100)
 
     """  
     self.operationRadioButtonsOther = []
@@ -239,8 +267,8 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
     self.enableScreenshotsFlagCheckBox = qt.QCheckBox()
     self.enableScreenshotsFlagCheckBox.checked = 0
     self.enableScreenshotsFlagCheckBox.setToolTip("If checked, take screen shots for tutorials. Use Save Data to write them to disk.")
-    parametersGridLayout.addWidget(qt.QLabel("Enable screenshots: "), 5, 0)
-    parametersGridLayout.addWidget(self.enableScreenshotsFlagCheckBox, 5, 1)
+    parametersGridLayout.addWidget(qt.QLabel("Enable screenshots: "), 6, 0)
+    parametersGridLayout.addWidget(self.enableScreenshotsFlagCheckBox, 6, 1)
   
   def cleanup(self):
     pass
@@ -254,6 +282,7 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
   def onOperationSelectionChanged(self, operationName, toggle):
     # logging.warning("ZZZ 2 " + str(widget) + ' ' + str(toggle))
     # operationName = self.widgetToOperationNameMap[widget]
+    
     if not toggle:
       return
     logging.warning(".")
@@ -262,6 +291,9 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
       logging.warning("8 bits")
       print self.RawDataArray
       print self.RawDataArray.size
+      #print self.inputFileSelector.currentPath
+      logging.warning(self.SkipHeaderBytesNum.value)
+                  
       #array[:] = a
       #volumeNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLScalarVolumeNode')
       #volumeNode.CreateDefaultDisplayNodes()
@@ -274,7 +306,7 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
       #array = array(node.GetID())
       
       #logging.warning (self.inputFileSelector.currentPath)
-      #logging.warning (self.SkipHeaderBytesNum.value)
+      logging.warning (self.SkipHeaderBytesNum.value)
       #logging.warning (self.ImageDimensionSliderWidgetX.value)
       #logging.warning (self.ImageDimensionSliderWidgetY.value)
     if operationName == BITS_UNSIGNED_16:
@@ -299,27 +331,36 @@ class RawImageGuessModuleWidget(ScriptedLoadableModuleWidget):
       print self.RawDataArray
       print self.RawDataArray.size
 
-  #TODO: correct the X*Y value with the value of the header (the skipped bytes)
-      
+  # TODO: correct the X*Y value with the value of the header (the skipped bytes)
+  # DONE
+  
   def CalculateCorrespondingXValue(self, value):
     self.ImageDimensionSliderWidgetX.blockSignals(True)
-    self.ImageDimensionSliderWidgetX.value = self.RawDataArray.size / self.ImageDimensionSliderWidgetY.value
-      # if self.ImageDimensionSliderWidgetX.value < self.RawDataArray.size/ self.ImageDimensionSliderWidgetY.value
-      # self.ImageDimensionSliderWidgetX.value = 
+    self.ImageDimensionSliderWidgetX.value = (self.RawDataArray.size / self.ImageDimensionSliderWidgetY.value)/self.ImageDimensionSliderWidgetZ.value
     self.ImageDimensionSliderWidgetX.blockSignals(False)
   
   def CalculateCorrespondingYValue(self, value):
     self.ImageDimensionSliderWidgetY.blockSignals(True)
-    self.ImageDimensionSliderWidgetY.value = self.RawDataArray.size / self.ImageDimensionSliderWidgetX.value
+    self.ImageDimensionSliderWidgetY.value = (self.RawDataArray.size / self.ImageDimensionSliderWidgetX.value)/self.ImageDimensionSliderWidgetZ.value
     self.ImageDimensionSliderWidgetY.blockSignals(False)
+
+  def CalculateCorrespondingZValue(self, value):
+    self.ImageDimensionSliderWidgetZ.blockSignals(True)
+    self.ImageDimensionSliderWidgetZ.value = self.RawDataArray.size
+    self.ImageDimensionSliderWidgetZ.blockSignals(False)
+
 
   def onApplyButton(self):
     logic = RawImageGuessModuleLogic()
     enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
     imageThreshold = self.imageThresholdSliderWidget.value
     logic.run(self.inputSelector.currentNode(), self.outputSelector.currentNode(), imageThreshold, enableScreenshotsFlag)
-
     
+    self.ImageDimensionSliderWidgetX.maximum = (self.RawDataArray.size - self.SkipHeaderBytesNum.value)/self.ImageDimensionSliderWidgetZ.value
+    self.ImageDimensionSliderWidgetY.maximum = (self.RawDataArray.size - self.SkipHeaderBytesNum.value)/self.ImageDimensionSliderWidgetZ.value
+    self.ImageDimensionSliderWidgetZ.maximum = self.RawDataArray.size - self.SkipHeaderBytesNum.value
+
+    self.ShowFileContents
     
 #
 # RawImageGuessModuleLogic
@@ -377,7 +418,7 @@ class RawImageGuessModuleLogic(ScriptedLoadableModuleLogic):
     """
     array[:] = a
     id = vtk.vtkImageData()
-    id.SetDimensions(self.ImageDimensionSliderWidgetX.value,self.ImageDimensionSliderWidgetY.value,0)
+    id.SetDimensions(self.ImageDimensionSliderWidgetX.value,self.ImageDimensionSliderWidgetY.value,self.ImageDimensionSliderWidgetX.value)
     id.SetScalartypeAsString(map[dtype])
     id.AllocateScalars
     node.SetAndObserveImageData(id)
