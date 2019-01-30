@@ -22,6 +22,7 @@ include(${Slicer_USE_FILE})
 add_subdirectory(RawImageGuessModule)
 add_subdirectory(RawImageGuessMdule)
 add_subdirectory(RawImageGuessModule)
+add_subdirectory(RawImageGuess)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
