@@ -16,9 +16,9 @@ class RawImageGuess(ScriptedLoadableModule):
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "RawImageGuess" # TODO make this more human readable by adding spaces
-    self.parent.categories = ["Examples"]
+    self.parent.categories = ["Informatics"]
     self.parent.dependencies = []
-    self.parent.contributors = ["John Doe (AnyWare Corp.)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Attila Nagy (University of Szeged, Szeged, Hungary)", "Csaba Pinter (Queens's University, Kingston, Ontario, Canada)", "Andras Lasso (Queens's University, Kingston, Ontario, Canada)", "Steve Pieper (Isomics Inc., Cambridge, MA, USA)" ]
     self.parent.helpText = """
 This is an example of scripted loadable module bundled in an extension.
 It performs a simple thresholding on the input volume and optionally captures a screenshot.
@@ -49,19 +49,21 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui = slicer.util.childWidgetVariables(uiWidget)
 
     self.ui.outputVolumeNodeSelector.setMRMLScene(slicer.mrmlScene)
-
+    
     # connections
-    self.ui.inputFileSelector.connect('currentPathChanged(QString)', self.onCurrentPathChanged)
     self.ui.outputVolumeNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeSelected)
+    self.ui.inputFileSelector.connect('currentPathChanged(QString)', self.onCurrentPathChanged)
+    self.ui.endiannessComboBox.connect('valueChanged(double)', self.onImageSizeChanged)
+    self.ui.imageSkipSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeXSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeYSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeZSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
-    self.ui.imageSkipSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
-    #self.ui.pixelTypeComboBox.connect('valueChanged(double)', self.onImageSizeChanged) TODO
+    self.ui.pixelTypeComboBox.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.updateButton.connect("clicked()", self.onUpdate)
 
     # Add vertical spacer
     self.layout.addStretch(1)
+    
 
   def cleanup(self):
     pass
@@ -81,10 +83,11 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.logic.updateImage(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
+      self.ui.endiannessComboBox.currentText,
       int(self.ui.imageSizeXSliderWidget.value),
       int(self.ui.imageSizeYSliderWidget.value),
       int(self.ui.imageSizeZSliderWidget.value),
-      int(self.ui.imageSkipSliderWidget.value),
+      long(self.ui.imageSkipSliderWidget.value),
       self.ui.pixelTypeComboBox.currentText
       )
 
@@ -106,13 +109,17 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     self.reader = vtk.vtkImageReader2()
 
   def updateImage(self, outputVolumeNode, imageFilePath,
-      sizeX, sizeY, sizeZ, headerSize, pixelTypeString):
+      endiannessString, sizeX, sizeY, sizeZ, headerSize, pixelTypeString):
     """
     Run the actual algorithm
     """
     
     self.reader.SetFileName(imageFilePath)
     self.reader.SetDataExtent(0, sizeX-1, 0, sizeY-1, 0, sizeZ-1)
+    if endiannessString == "Little endian":
+      self.reader.SetDataByteOrderToLittleEndian()
+    elif endiannessString == "Big endian":
+      self.reader.SetDataByteOrderToBigEndian()
     if pixelTypeString == "8 bit unsigned":
       self.reader.SetDataScalarTypeToUnsignedChar()
     elif pixelTypeString == "8 bit signed":
@@ -121,7 +128,10 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
       self.reader.SetDataScalarTypeToUnsignedShort()
     elif pixelTypeString == "16 bit signed":
       self.reader.SetDataScalarTypeToShort()
-    # TODO
+    elif pixelTypeString == "float":
+      self.reader.SetDataScalarTypeToFloat()
+    elif pixelTypeString == "double":
+      self.reader.SetDataScalarTypeToDouble()
     self.reader.SetHeaderSize(headerSize)
     self.reader.Update()
     outputVolumeNode.SetImageDataConnection(self.reader.GetOutputPort())
