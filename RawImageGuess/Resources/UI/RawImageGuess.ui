@@ -57,6 +57,12 @@
    </item>
    <item row="1" column="1">
     <widget class="ctkPathLineEdit" name="inputFileSelector">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="toolTip">
       <string>Choose the input file</string>
      </property>
@@ -93,7 +99,7 @@
       <double>0.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>2500.000000000000000</double>
+      <double>10000.000000000000000</double>
      </property>
      <property name="value">
       <double>0.000000000000000</double>
@@ -112,6 +118,12 @@
    </item>
    <item row="5" column="1">
     <widget class="ctkSliderWidget" name="imageSizeXSliderWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="toolTip">
       <string>Set the image dimensions on the X axis</string>
      </property>
@@ -125,7 +137,7 @@
       <double>1.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>5000.000000000000000</double>
+      <double>10000.000000000000000</double>
      </property>
      <property name="value">
       <double>200.000000000000000</double>
@@ -157,7 +169,7 @@
       <double>1.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>2500.000000000000000</double>
+      <double>10000.000000000000000</double>
      </property>
      <property name="value">
       <double>200.000000000000000</double>
@@ -189,7 +201,7 @@
       <double>1.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>2500.000000000000000</double>
+      <double>10000.000000000000000</double>
      </property>
      <property name="value">
       <double>1.000000000000000</double>
