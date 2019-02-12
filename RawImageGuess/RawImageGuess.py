@@ -48,8 +48,15 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.layout.addWidget(uiWidget)
     self.ui = slicer.util.childWidgetVariables(uiWidget)
 
-    self.ui.outputVolumeNodeSelector.setMRMLScene(slicer.mrmlScene)
+    self.ui.imageSkipSliderWidget.enabled = False
+    self.ui.imageSizeXSliderWidget.enabled = False
+    self.ui.imageSizeYSliderWidget.enabled = False
+    self.ui.imageSizeZSliderWidget.enabled = False
+    self.ui.pixelTypeComboBox.enabled = False
+    self.ui.endiannessComboBox.enabled = False
     
+    self.ui.outputVolumeNodeSelector.setMRMLScene(slicer.mrmlScene)
+
     # connections
     self.ui.outputVolumeNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeSelected)
     self.ui.inputFileSelector.connect('currentPathChanged(QString)', self.onCurrentPathChanged)
@@ -63,17 +70,29 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
 
     # Add vertical spacer
     self.layout.addStretch(1)
-    
 
   def cleanup(self):
     pass
     
-  #TODO Consider endianness
+  
   def onCurrentPathChanged(self, path):
     self.ui.inputFileSelector.addCurrentPathToHistory()
+    with open(self.ui.inputFileSelector.currentPath) as file:  
+      fileHeader = file.read(500)
+      self.ui.textEdit.setText(fileHeader)
+    if not self.ui.outputVolumeNodeSelector.currentNode(): 
+      return
     self.onUpdate()
-
+    
   def onOutputNodeSelected(self, node):
+    self.ui.outputVolumeNodeSelector.currentNodeChanged
+    self.ui.imageSkipSliderWidget.enabled = True
+    self.ui.imageSizeXSliderWidget.enabled = True
+    self.ui.imageSizeYSliderWidget.enabled = True
+    self.ui.imageSizeZSliderWidget.enabled = True
+    self.ui.pixelTypeComboBox.enabled = True
+    self.ui.endiannessComboBox.enabled = True
+    #slicer.util.setSliceViewerLayers(foreground=
     self.onUpdate()
 
   def onImageSizeChanged(self, value):
@@ -135,6 +154,7 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     self.reader.SetHeaderSize(headerSize)
     self.reader.Update()
     outputVolumeNode.SetImageDataConnection(self.reader.GetOutputPort())
+     #outputVolumeNode.SetImageDataConnection(self.reader.GetOutputPort()) == Volume
     outputVolumeNode.Modified()
 
 class RawImageGuessTest(ScriptedLoadableModuleTest):
