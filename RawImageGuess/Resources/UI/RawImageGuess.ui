@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>574</width>
-    <height>426</height>
+    <height>487</height>
    </rect>
   </property>
   <property name="toolTip">
@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Output Volume:</string>
+      <string>Output volume:</string>
      </property>
     </widget>
    </item>
@@ -71,144 +71,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="imageSkipLabel">
-     <property name="toolTip">
-      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
-     </property>
-     <property name="text">
-      <string>Header size:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
-    <widget class="ctkSliderWidget" name="imageSkipSliderWidget">
-     <property name="toolTip">
-      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
-     </property>
-     <property name="toolTipDuration">
-      <number>11</number>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="imageSizeXLabel">
-     <property name="toolTip">
-      <string>Set the image dimensions on the X axis</string>
-     </property>
-     <property name="text">
-      <string>X dimension:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1">
-    <widget class="ctkSliderWidget" name="imageSizeXSliderWidget">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Set the image dimensions on the X axis</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>200.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="imageSizeYLabel">
-     <property name="toolTip">
-      <string>Set the image dimensions on the Y axis</string>
-     </property>
-     <property name="text">
-      <string>Y dimension:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="ctkSliderWidget" name="imageSizeYSliderWidget">
-     <property name="toolTip">
-      <string>Set the image dimensions on the Y axis</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>200.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="imageSizeZLabel">
-     <property name="toolTip">
-      <string>Set the number of slices for the volume.</string>
-     </property>
-     <property name="text">
-      <string>Z dimension:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="1">
-    <widget class="ctkSliderWidget" name="imageSizeZSliderWidget">
-     <property name="toolTip">
-      <string>Set the number of slices for the volume.</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>1.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0">
+   <item row="2" column="0">
     <widget class="QLabel" name="label_4">
      <property name="toolTip">
       <string>Set the bit depth for the volume.</string>
@@ -218,7 +81,7 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="1">
+   <item row="2" column="1">
     <widget class="ctkComboBox" name="pixelTypeComboBox">
      <property name="toolTip">
       <string>Set the image pixel bit depth</string>
@@ -255,27 +118,17 @@
      </item>
     </widget>
    </item>
-   <item row="9" column="0" colspan="2">
-    <widget class="ctkCheckablePushButton" name="updateButton">
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_5">
      <property name="toolTip">
-      <string>Update view</string>
+      <string>Set endianness</string>
      </property>
      <property name="text">
-      <string>Update</string>
+      <string>Endianness:</string>
      </property>
     </widget>
    </item>
-   <item row="10" column="0">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Header:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="0" colspan="2">
-    <widget class="QTextEdit" name="textEdit"/>
-   </item>
-   <item row="3" column="1">
+   <item row="4" column="1">
     <widget class="QComboBox" name="endiannessComboBox">
      <property name="toolTip">
       <string>Set endianness</string>
@@ -292,13 +145,333 @@
      </item>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_5">
+   <item row="5" column="0">
+    <widget class="QLabel" name="imageSkipLabel">
      <property name="toolTip">
-      <string>Set endianness</string>
+      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
      </property>
      <property name="text">
-      <string>Endianness:</string>
+      <string>Header size:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="ctkSliderWidget" name="imageSkipSliderWidget">
+     <property name="toolTip">
+      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
+     </property>
+     <property name="toolTipDuration">
+      <number>11</number>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10000.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="imageSizeXLabel">
+     <property name="toolTip">
+      <string>Set the image dimensions on the X axis</string>
+     </property>
+     <property name="text">
+      <string>X dimension:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="ctkSliderWidget" name="imageSizeXSliderWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Set the image dimensions on the X axis</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10000.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>200.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="imageSizeYLabel">
+     <property name="toolTip">
+      <string>Set the image dimensions on the Y axis</string>
+     </property>
+     <property name="text">
+      <string>Y dimension:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="ctkSliderWidget" name="imageSizeYSliderWidget">
+     <property name="toolTip">
+      <string>Set the image dimensions on the Y axis</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10000.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>200.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="imageSizeZLabel">
+     <property name="toolTip">
+      <string>Set the number of slices for the volume.</string>
+     </property>
+     <property name="text">
+      <string>Z dimension:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="ctkSliderWidget" name="imageSizeZSliderWidget">
+     <property name="toolTip">
+      <string>Set the number of slices for the volume.</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10000.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="skipSlicesLabel">
+     <property name="toolTip">
+      <string>Skip this many number of slices before adding the first slice to the ouput volume.</string>
+     </property>
+     <property name="text">
+      <string>Skip slices:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="ctkSliderWidget" name="skipSlicesSliderWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Skip this many number of slices before adding the first slice to the ouput volume.</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10000.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="imageSpacingXLabel">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis.</string>
+     </property>
+     <property name="text">
+      <string>X spacing:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="0">
+    <widget class="QLabel" name="fitToViewsLabel">
+     <property name="toolTip">
+      <string>Zoom and pan slice views on update to show the entire output volume.</string>
+     </property>
+     <property name="text">
+      <string>Fit output in views:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1">
+    <widget class="QCheckBox" name="fitToViewsCheckBox">
+     <property name="toolTip">
+      <string>Zoom and pan slice views on update to show the entire output volume.</string>
+     </property>
+     <property name="text">
+      <string> </string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0" colspan="2">
+    <widget class="ctkCheckablePushButton" name="updateButton">
+     <property name="toolTip">
+      <string>Update view</string>
+     </property>
+     <property name="text">
+      <string>Update</string>
+     </property>
+     <property name="checkState">
+      <enum>Qt::Unchecked</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Header:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="0" colspan="2">
+    <widget class="QTextEdit" name="textEdit"/>
+   </item>
+   <item row="10" column="1">
+    <widget class="qMRMLSliderWidget" name="imageSpacingXSliderWidget">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="pageStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="popupSlider">
+      <bool>false</bool>
+     </property>
+     <property name="quantity">
+      <string>Length</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="qMRMLSliderWidget" name="imageSpacingYSliderWidget">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="pageStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="quantity">
+      <string>Length</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="1">
+    <widget class="qMRMLSliderWidget" name="imageSpacingZSliderWidget">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="pageStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="popupSlider">
+      <bool>false</bool>
+     </property>
+     <property name="quantity">
+      <string>Length</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="imageSpacingYLabel">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis.</string>
+     </property>
+     <property name="text">
+      <string>Y spacing:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QLabel" name="imageSpacingZLabel">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis.</string>
+     </property>
+     <property name="text">
+      <string>Z spacing:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="0" colspan="2">
+    <widget class="QPushButton" name="generateNrrdHeaderButton">
+     <property name="text">
+      <string>Generate NRRD image header</string>
      </property>
     </widget>
    </item>
@@ -334,6 +507,11 @@
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLSliderWidget</class>
+   <extends>ctkSliderWidget</extends>
+   <header>qMRMLSliderWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
