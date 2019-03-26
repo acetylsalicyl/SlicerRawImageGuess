@@ -20,13 +20,11 @@ class RawImageGuess(ScriptedLoadableModule):
     self.parent.dependencies = []
     self.parent.contributors = ["Attila Nagy (University of Szeged, Szeged, Hungary)", "Csaba Pinter (Queens's University, Kingston, Ontario, Canada)", "Andras Lasso (Queens's University, Kingston, Ontario, Canada)", "Steve Pieper (Isomics Inc., Cambridge, MA, USA)" ]
     self.parent.helpText = """
-This is an example of scripted loadable module bundled in an extension.
-It performs a simple thresholding on the input volume and optionally captures a screenshot.
+This module can help loading images stored in an unkwnon file format by allowing quickly trying various voxel types and image sizes.
 """
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
     self.parent.acknowledgementText = """
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
+This file was originally developed by Attila Nagy.
 """ # replace with organization, grant and thanks.
 
 #
@@ -47,15 +45,10 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     uiWidget = slicer.util.loadUI(self.resourcePath('UI/RawImageGuess.ui'))
     self.layout.addWidget(uiWidget)
     self.ui = slicer.util.childWidgetVariables(uiWidget)
-
-    self.ui.imageSkipSliderWidget.enabled = False
-    self.ui.imageSizeXSliderWidget.enabled = False
-    self.ui.imageSizeYSliderWidget.enabled = False
-    self.ui.imageSizeZSliderWidget.enabled = False
-    self.ui.pixelTypeComboBox.enabled = False
-    self.ui.endiannessComboBox.enabled = False
     
     self.ui.outputVolumeNodeSelector.setMRMLScene(slicer.mrmlScene)
+
+    self.updateButtonStates()
 
     # connections
     self.ui.outputVolumeNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeSelected)
@@ -65,15 +58,31 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.imageSizeXSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeYSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeZSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
+    self.ui.skipSlicesSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
+    self.ui.imageSpacingXSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
+    self.ui.imageSpacingYSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
+    self.ui.imageSpacingZSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.pixelTypeComboBox.connect('valueChanged(double)', self.onImageSizeChanged)
-    self.ui.updateButton.connect("clicked()", self.onUpdate)
+    self.ui.fitToViewsCheckBox.connect("toggled(bool)", self.onFitToViewsCheckboxClicked)
+    self.ui.updateButton.connect("clicked()", self.onUpdateButtonClicked)
+    self.ui.updateButton.connect("checkBoxToggled(bool)", self.onUpdateCheckboxClicked)
+    self.ui.generateNrrdHeaderButton.connect("clicked()", self.onGenerateNrrdHeaderButtonClicked)
 
     # Add vertical spacer
     self.layout.addStretch(1)
 
+    self.loadParametersFromSettings()
+
   def cleanup(self):
     pass
-    
+
+  def enter(self):
+    pass
+
+  def exit(self):
+    # disable auto-update when exiting the module to prevent accidental
+    # updates of other volumes (when the current output volume is deleted)
+    self.ui.updateButton.checkState = qt.Qt.Unchecked
   
   def onCurrentPathChanged(self, path):
     self.ui.inputFileSelector.addCurrentPathToHistory()
@@ -82,32 +91,127 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
       self.ui.textEdit.setText(fileHeader)
     if not self.ui.outputVolumeNodeSelector.currentNode(): 
       return
-    self.onUpdate()
-    
+    if self.ui.updateButton.checkState == qt.Qt.Checked:
+      self.onUpdate()
+      self.showOutputVolume()
+
+  def updateButtonStates(self):
+    enabled = ( (self.ui.outputVolumeNodeSelector.currentNode())
+      and (self.ui.inputFileSelector.currentPath) )
+    self.ui.updateButton.enabled = enabled
+    if enabled:
+      self.ui.updateButton.toolTip = "Read file into output volume"
+    else:
+      self.ui.updateButton.toolTip = "Select input file and output volume"
+
+    enabled = bool(self.ui.inputFileSelector.currentPath)
+    self.ui.generateNrrdHeaderButton.enabled = enabled
+    if enabled:
+      self.ui.generateNrrdHeaderButton.toolTip = "Generate NRRD header file (.nhdr)"
+    else:
+      self.ui.generateNrrdHeaderButton.toolTip = "Select input file"      
+
+  def showOutputVolume(self):
+    selectedVolumeNode = self.ui.outputVolumeNodeSelector.currentNode()
+    if selectedVolumeNode:
+      fit = self.ui.fitToViewsCheckBox.checked
+      slicer.util.setSliceViewerLayers(background=selectedVolumeNode, fit=fit)
+
   def onOutputNodeSelected(self, node):
-    self.ui.outputVolumeNodeSelector.currentNodeChanged
-    self.ui.imageSkipSliderWidget.enabled = True
-    self.ui.imageSizeXSliderWidget.enabled = True
-    self.ui.imageSizeYSliderWidget.enabled = True
-    self.ui.imageSizeZSliderWidget.enabled = True
-    self.ui.pixelTypeComboBox.enabled = True
-    self.ui.endiannessComboBox.enabled = True
-    #slicer.util.setSliceViewerLayers(foreground=
-    self.onUpdate()
+    self.updateButtonStates()
+    self.logic.newImage()
+    if self.ui.updateButton.checkState == qt.Qt.Checked:
+      self.onUpdate()
+      self.showOutputVolume()
 
   def onImageSizeChanged(self, value):
+    if self.ui.updateButton.checkState == qt.Qt.Checked:
+      self.onUpdate()
+      self.showOutputVolume()
+
+  def saveParametersToSettings(self):
+    settings = qt.QSettings()
+    settings.setValue('RawImageGuess/pixelType', self.ui.pixelTypeComboBox.currentText)
+    settings.setValue('RawImageGuess/endianness', self.ui.endiannessComboBox.currentText)
+    settings.setValue('RawImageGuess/headerSize', self.ui.imageSkipSliderWidget.value)    
+    settings.setValue('RawImageGuess/sizeX', self.ui.imageSizeXSliderWidget.value)
+    settings.setValue('RawImageGuess/sizeY', self.ui.imageSizeYSliderWidget.value)
+    settings.setValue('RawImageGuess/sizeZ', self.ui.imageSizeZSliderWidget.value)
+    settings.setValue('RawImageGuess/skipSlices', self.ui.skipSlicesSliderWidget.value)
+    settings.setValue('RawImageGuess/spacingX', self.ui.imageSpacingXSliderWidget.value)
+    settings.setValue('RawImageGuess/spacingY', self.ui.imageSpacingXSliderWidget.value)
+    settings.setValue('RawImageGuess/spacingZ', self.ui.imageSpacingXSliderWidget.value)
+
+  def loadParametersFromSettings(self):
+    settings = qt.QSettings()
+    self.ui.pixelTypeComboBox.currentText = settings.value('RawImageGuess/pixelType')
+    self.ui.endiannessComboBox.currentText = settings.value('RawImageGuess/endianness')
+    self.ui.imageSkipSliderWidget.value = long(settings.value('RawImageGuess/headerSize', 0))
+    self.ui.imageSizeXSliderWidget.value = long(settings.value('RawImageGuess/sizeX', 200))
+    self.ui.imageSizeYSliderWidget.value = long(settings.value('RawImageGuess/sizeY', 200))
+    self.ui.imageSizeZSliderWidget.value = long(settings.value('RawImageGuess/sizeZ', 1))
+    self.ui.skipSlicesSliderWidget.value = long(settings.value('RawImageGuess/skipSlices', 0))
+    self.ui.imageSpacingXSliderWidget.value = float(settings.value('RawImageGuess/spacingX', 1.0))
+    self.ui.imageSpacingYSliderWidget.value = float(settings.value('RawImageGuess/spacingY', 1.0))
+    self.ui.imageSpacingZSliderWidget.value = float(settings.value('RawImageGuess/spacingZ', 1.0))
+
+  def onFitToViewsCheckboxClicked(self, enable):
+    self.showOutputVolume()
+
+  def onUpdateCheckboxClicked(self, enable):
+    if enable:
+      self.onUpdate()
+      self.showOutputVolume()
+
+  def onUpdateButtonClicked(self):
+    if self.ui.updateButton.checkState == qt.Qt.Checked:
+      # If update button is untoggled then make it unchecked, too
+      self.ui.updateButton.checkState = qt.Qt.Unchecked
     self.onUpdate()
+    self.showOutputVolume()
+
+  def onGenerateNrrdHeaderButtonClicked(self):
+    if not self.ui.generateNrrdHeaderButton.enabled:
+      return
+    if not self.ui.inputFileSelector.currentPath:
+      return
+    self.saveParametersToSettings()      
+    self.logic.generateImageHeader(
+      self.ui.outputVolumeNodeSelector.currentNode(),
+      self.ui.inputFileSelector.currentPath,
+      self.ui.pixelTypeComboBox.currentText,
+      self.ui.endiannessComboBox.currentText,
+      long(self.ui.imageSizeXSliderWidget.value),
+      long(self.ui.imageSizeYSliderWidget.value),
+      long(self.ui.imageSizeZSliderWidget.value),
+      long(self.ui.imageSkipSliderWidget.value),
+      long(self.ui.skipSlicesSliderWidget.value),
+      float(self.ui.imageSpacingXSliderWidget.value),
+      float(self.ui.imageSpacingYSliderWidget.value),
+      float(self.ui.imageSpacingZSliderWidget.value)
+      )
 
   def onUpdate(self):
+    if not self.ui.updateButton.enabled:
+      return
+    if not self.ui.outputVolumeNodeSelector.currentNode():
+      return
+    if not self.ui.inputFileSelector.currentPath:
+      return
+    self.saveParametersToSettings()      
     self.logic.updateImage(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
+      self.ui.pixelTypeComboBox.currentText,
       self.ui.endiannessComboBox.currentText,
-      int(self.ui.imageSizeXSliderWidget.value),
-      int(self.ui.imageSizeYSliderWidget.value),
-      int(self.ui.imageSizeZSliderWidget.value),
+      long(self.ui.imageSizeXSliderWidget.value),
+      long(self.ui.imageSizeYSliderWidget.value),
+      long(self.ui.imageSizeZSliderWidget.value),
       long(self.ui.imageSkipSliderWidget.value),
-      self.ui.pixelTypeComboBox.currentText
+      long(self.ui.skipSlicesSliderWidget.value),
+      float(self.ui.imageSpacingXSliderWidget.value),
+      float(self.ui.imageSpacingYSliderWidget.value),
+      float(self.ui.imageSpacingZSliderWidget.value)
       )
 
 #
@@ -127,35 +231,123 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
   def __init__(self):
     self.reader = vtk.vtkImageReader2()
 
+  def newImage(self):
+    # If a new image is selected then we create an independent reader
+    # (to prevent overwriting previous volumes with updateImage).
+    # We do not create a new reader on each updateImage to improve performence
+    # (avoid reallocation of the image).
+    self.reader = vtk.vtkImageReader2()
+
   def updateImage(self, outputVolumeNode, imageFilePath,
-      endiannessString, sizeX, sizeY, sizeZ, headerSize, pixelTypeString):
+      pixelTypeString, endiannessString, sizeX, sizeY, sizeZ, headerSize, skipSlices,
+      spacingX, spacingY, spacingZ):
     """
-    Run the actual algorithm
+    Reads image into output volume
     """
     
+    scalarType = RawImageGuessLogic.scalarTypeFromString(pixelTypeString)
+    sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType)
+    totalHeaderSize = headerSize + skipSlices * sliceSize
+    import os
+    totalFilesize = os.path.getsize(imageFilePath)
+    voxelDataSize = totalFilesize - totalHeaderSize
+    maxNumberOfSlices = voxelDataSize/sliceSize
+    finalSizeZ = min(sizeZ, maxNumberOfSlices)
+
     self.reader.SetFileName(imageFilePath)
-    self.reader.SetDataExtent(0, sizeX-1, 0, sizeY-1, 0, sizeZ-1)
+    self.reader.SetFileDimensionality(3)
+    self.reader.SetDataExtent(0, sizeX-1, 0, sizeY-1, 0, finalSizeZ-1)
     if endiannessString == "Little endian":
       self.reader.SetDataByteOrderToLittleEndian()
-    elif endiannessString == "Big endian":
+    else:
       self.reader.SetDataByteOrderToBigEndian()
-    if pixelTypeString == "8 bit unsigned":
-      self.reader.SetDataScalarTypeToUnsignedChar()
-    elif pixelTypeString == "8 bit signed":
-      self.reader.SetDataScalarTypeToSignedChar()
-    elif pixelTypeString == "16 bit unsigned":
-      self.reader.SetDataScalarTypeToUnsignedShort()
-    elif pixelTypeString == "16 bit signed":
-      self.reader.SetDataScalarTypeToShort()
-    elif pixelTypeString == "float":
-      self.reader.SetDataScalarTypeToFloat()
-    elif pixelTypeString == "double":
-      self.reader.SetDataScalarTypeToDouble()
-    self.reader.SetHeaderSize(headerSize)
+    self.reader.SetDataScalarType(scalarType)
+    self.reader.SetHeaderSize(totalHeaderSize)
+    self.reader.SetFileLowerLeft(True) # to match input from NRRD reader
     self.reader.Update()
     outputVolumeNode.SetImageDataConnection(self.reader.GetOutputPort())
-     #outputVolumeNode.SetImageDataConnection(self.reader.GetOutputPort()) == Volume
+    # We assume file is in LPS and invert first and second axes
+    # to get volume in RAS.
+    ijkToRas = vtk.vtkMatrix4x4()
+    ijkToRas.SetElement(0,0, -spacingX)
+    ijkToRas.SetElement(1,1, -spacingY)
+    ijkToRas.SetElement(2,2, spacingZ)
+    outputVolumeNode.SetIJKToRASMatrix(ijkToRas)
     outputVolumeNode.Modified()
+
+  def generateImageHeader(self, outputVolumeNode, imageFilePath,
+      pixelTypeString, endiannessString, sizeX, sizeY, sizeZ, headerSize, skipSlices,
+      spacingX, spacingY, spacingZ):
+    """
+    Reads image into output volume
+    """
+    
+    scalarType = RawImageGuessLogic.scalarTypeFromString(pixelTypeString)
+    sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType)
+    totalHeaderSize = headerSize + skipSlices * sliceSize
+    import os
+    totalFilesize = os.path.getsize(imageFilePath)
+    voxelDataSize = totalFilesize - totalHeaderSize
+    maxNumberOfSlices = voxelDataSize/sliceSize
+    finalSizeZ = min(sizeZ, maxNumberOfSlices)
+
+    import os
+    filename, file_extension = os.path.splitext(imageFilePath)
+    nhdrFilename = filename + ".nhdr"
+
+    with open(nhdrFilename, "w") as headerFile:
+      headerFile.write("NRRD0004\n")
+      headerFile.write("# Complete NRRD file format specification at:\n")
+      headerFile.write("# http://teem.sourceforge.net/nrrd/format.html\n")
+
+      if scalarType == vtk.VTK_UNSIGNED_CHAR:
+        typeStr = "uchar"
+      elif scalarType == vtk.VTK_SIGNED_CHAR:
+        typeStr = "signed char"
+      elif scalarType == vtk.VTK_UNSIGNED_SHORT:
+        typeStr = "ushort"
+      elif scalarType == vtk.VTK_SHORT:
+        typeStr = "short"
+      elif scalarType == vtk.VTK_FLOAT:
+        typeStr = "float"
+      elif scalarType == vtk.VTK_DOUBLE:
+        typeStr = "double"
+      else:
+        raise ValueError('Unknown scalar type')
+      headerFile.write("type: {0}\n".format(typeStr))
+
+      headerFile.write("dimension: 3\n")
+      headerFile.write("space: left-posterior-superior\n")
+      headerFile.write("sizes: {0} {1} {2}\n".format(sizeX, sizeY, finalSizeZ))
+      headerFile.write("space directions: ({0}, 0.0, 0.0) (0.0, {1}, 0.0) (0.0, 0.0, {2})\n".format(spacingX, spacingY, spacingZ))
+      headerFile.write("kinds: domain domain domain\n")
+
+      if endiannessString == "Little endian":
+        headerFile.write("endian: little\n")
+      else:
+        headerFile.write("endian: big\n")
+
+      headerFile.write("encoding: raw\n")
+      headerFile.write("space origin: (0.0, 0.0, 0.0)\n")
+
+      if totalHeaderSize > 0:
+        headerFile.write("byte skip: {0}\n".format(totalHeaderSize))
+      headerFile.write("data file: {0}\n".format(os.path.basename(imageFilePath)))
+
+  @staticmethod
+  def scalarTypeFromString(scalarTypeStr):
+    if scalarTypeStr == "8 bit unsigned":
+      return vtk.VTK_UNSIGNED_CHAR
+    elif scalarTypeStr == "8 bit signed":
+      return vtk.VTK_SIGNED_CHAR
+    elif scalarTypeStr == "16 bit unsigned":
+      return vtk.VTK_UNSIGNED_SHORT
+    elif scalarTypeStr == "16 bit signed":
+      return vtk.VTK_SHORT
+    elif scalarTypeStr == "float":
+      return vtk.VTK_FLOAT
+    elif scalarTypeStr == "double":
+      return vtk.VTK_DOUBLE
 
 class RawImageGuessTest(ScriptedLoadableModuleTest):
   """
