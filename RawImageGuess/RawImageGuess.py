@@ -31,6 +31,13 @@ This file was originally developed by Attila Nagy.
 # RawImageGuessWidget
 #
 
+def toLong(value):
+  import sys
+  if sys.version_info[0] < 3:
+    return long(value)
+  else:
+    return int(value)
+
 class RawImageGuessWidget(ScriptedLoadableModuleWidget):
   """Uses ScriptedLoadableModuleWidget base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
@@ -53,7 +60,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     # connections
     self.ui.outputVolumeNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeSelected)
     self.ui.inputFileSelector.connect('currentPathChanged(QString)', self.onCurrentPathChanged)
-    self.ui.endiannessComboBox.connect('valueChanged(double)', self.onImageSizeChanged)
+    self.ui.endiannessComboBox.connect('currentIndexChanged(int)', self.onImageSizeChanged)
     self.ui.imageSkipSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeXSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeYSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
@@ -62,7 +69,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.imageSpacingXSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSpacingYSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSpacingZSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
-    self.ui.pixelTypeComboBox.connect('valueChanged(double)', self.onImageSizeChanged)
+    self.ui.pixelTypeComboBox.connect('currentIndexChanged(int)', self.onImageSizeChanged)
     self.ui.fitToViewsCheckBox.connect("toggled(bool)", self.onFitToViewsCheckboxClicked)
     self.ui.updateButton.connect("clicked()", self.onUpdateButtonClicked)
     self.ui.updateButton.connect("checkBoxToggled(bool)", self.onUpdateCheckboxClicked)
@@ -96,20 +103,20 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
       self.showOutputVolume()
 
   def updateButtonStates(self):
-    enabled = ( (self.ui.outputVolumeNodeSelector.currentNode())
-      and (self.ui.inputFileSelector.currentPath) )
+    enabled = bool(self.ui.inputFileSelector.currentPath)
     self.ui.updateButton.enabled = enabled
     if enabled:
       self.ui.updateButton.toolTip = "Read file into output volume"
     else:
-      self.ui.updateButton.toolTip = "Select input file and output volume"
+      self.ui.updateButton.toolTip = "Select input file"
 
-    enabled = bool(self.ui.inputFileSelector.currentPath)
+    enabled = ( (self.ui.outputVolumeNodeSelector.currentNode())
+      and (self.ui.inputFileSelector.currentPath) )
     self.ui.generateNrrdHeaderButton.enabled = enabled
     if enabled:
       self.ui.generateNrrdHeaderButton.toolTip = "Generate NRRD header file (.nhdr)"
     else:
-      self.ui.generateNrrdHeaderButton.toolTip = "Select input file"      
+      self.ui.generateNrrdHeaderButton.toolTip = "Select input file and output volume"
 
   def showOutputVolume(self):
     selectedVolumeNode = self.ui.outputVolumeNodeSelector.currentNode()
@@ -146,11 +153,11 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     settings = qt.QSettings()
     self.ui.pixelTypeComboBox.currentText = settings.value('RawImageGuess/pixelType')
     self.ui.endiannessComboBox.currentText = settings.value('RawImageGuess/endianness')
-    self.ui.imageSkipSliderWidget.value = long(settings.value('RawImageGuess/headerSize', 0))
-    self.ui.imageSizeXSliderWidget.value = long(settings.value('RawImageGuess/sizeX', 200))
-    self.ui.imageSizeYSliderWidget.value = long(settings.value('RawImageGuess/sizeY', 200))
-    self.ui.imageSizeZSliderWidget.value = long(settings.value('RawImageGuess/sizeZ', 1))
-    self.ui.skipSlicesSliderWidget.value = long(settings.value('RawImageGuess/skipSlices', 0))
+    self.ui.imageSkipSliderWidget.value = toLong(settings.value('RawImageGuess/headerSize', 0))
+    self.ui.imageSizeXSliderWidget.value = toLong(settings.value('RawImageGuess/sizeX', 200))
+    self.ui.imageSizeYSliderWidget.value = toLong(settings.value('RawImageGuess/sizeY', 200))
+    self.ui.imageSizeZSliderWidget.value = toLong(settings.value('RawImageGuess/sizeZ', 1))
+    self.ui.skipSlicesSliderWidget.value = toLong(settings.value('RawImageGuess/skipSlices', 0))
     self.ui.imageSpacingXSliderWidget.value = float(settings.value('RawImageGuess/spacingX', 1.0))
     self.ui.imageSpacingYSliderWidget.value = float(settings.value('RawImageGuess/spacingY', 1.0))
     self.ui.imageSpacingZSliderWidget.value = float(settings.value('RawImageGuess/spacingZ', 1.0))
@@ -176,26 +183,27 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     if not self.ui.inputFileSelector.currentPath:
       return
     self.saveParametersToSettings()      
-    self.logic.generateImageHeader(
+    generatedFilename = self.logic.generateImageHeader(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
       self.ui.pixelTypeComboBox.currentText,
       self.ui.endiannessComboBox.currentText,
-      long(self.ui.imageSizeXSliderWidget.value),
-      long(self.ui.imageSizeYSliderWidget.value),
-      long(self.ui.imageSizeZSliderWidget.value),
-      long(self.ui.imageSkipSliderWidget.value),
-      long(self.ui.skipSlicesSliderWidget.value),
+      toLong(self.ui.imageSizeXSliderWidget.value),
+      toLong(self.ui.imageSizeYSliderWidget.value),
+      toLong(self.ui.imageSizeZSliderWidget.value),
+      toLong(self.ui.imageSkipSliderWidget.value),
+      toLong(self.ui.skipSlicesSliderWidget.value),
       float(self.ui.imageSpacingXSliderWidget.value),
       float(self.ui.imageSpacingYSliderWidget.value),
       float(self.ui.imageSpacingZSliderWidget.value)
       )
+    slicer.util.delayDisplay("Image header file created at "+generatedFilename, autoCloseMsec=2000)
 
   def onUpdate(self):
     if not self.ui.updateButton.enabled:
       return
     if not self.ui.outputVolumeNodeSelector.currentNode():
-      return
+      self.ui.outputVolumeNodeSelector.addNode()
     if not self.ui.inputFileSelector.currentPath:
       return
     self.saveParametersToSettings()      
@@ -204,11 +212,11 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
       self.ui.inputFileSelector.currentPath,
       self.ui.pixelTypeComboBox.currentText,
       self.ui.endiannessComboBox.currentText,
-      long(self.ui.imageSizeXSliderWidget.value),
-      long(self.ui.imageSizeYSliderWidget.value),
-      long(self.ui.imageSizeZSliderWidget.value),
-      long(self.ui.imageSkipSliderWidget.value),
-      long(self.ui.skipSlicesSliderWidget.value),
+      toLong(self.ui.imageSizeXSliderWidget.value),
+      toLong(self.ui.imageSizeYSliderWidget.value),
+      toLong(self.ui.imageSizeZSliderWidget.value),
+      toLong(self.ui.imageSkipSliderWidget.value),
+      toLong(self.ui.skipSlicesSliderWidget.value),
       float(self.ui.imageSpacingXSliderWidget.value),
       float(self.ui.imageSpacingYSliderWidget.value),
       float(self.ui.imageSpacingZSliderWidget.value)
@@ -333,6 +341,8 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
       if totalHeaderSize > 0:
         headerFile.write("byte skip: {0}\n".format(totalHeaderSize))
       headerFile.write("data file: {0}\n".format(os.path.basename(imageFilePath)))
+    
+    return nhdrFilename
 
   @staticmethod
   def scalarTypeFromString(scalarTypeStr):
