@@ -15,12 +15,12 @@ class RawImageGuess(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "RawImageGuess" # TODO make this more human readable by adding spaces
+    self.parent.title = "Raw Image Guess"
     self.parent.categories = ["Informatics"]
     self.parent.dependencies = []
     self.parent.contributors = ["Attila Nagy (University of Szeged, Szeged, Hungary)", "Csaba Pinter (Queens's University, Kingston, Ontario, Canada)", "Andras Lasso (Queens's University, Kingston, Ontario, Canada)", "Steve Pieper (Isomics Inc., Cambridge, MA, USA)" ]
     self.parent.helpText = """
-This module can help loading images stored in an unkwnon file format by allowing quickly trying various voxel types and image sizes.
+This module can help loading images stored in an unkwnon file format by allowing quickly trying various voxel types and image sizes. See more information at the <a href="https://github.com/acetylsalicyl/SlicerRawImageGuess">extension's website</a>.
 """
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
     self.parent.acknowledgementText = """
