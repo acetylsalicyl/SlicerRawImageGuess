@@ -202,15 +202,26 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
   def onUpdate(self):
     if not self.ui.updateButton.enabled:
       return
+
+    # Determine if we need to create a new volume
+    createNewVolume = False
+    pixelTypeString = self.ui.pixelTypeComboBox.currentText
+    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
     if not self.ui.outputVolumeNodeSelector.currentNode():
-      self.ui.outputVolumeNodeSelector.addNode()
+      createNewVolume = True
+    else:
+      if (numberOfComponents > 1) != self.ui.outputVolumeNodeSelector.currentNode().IsA("vtkMRMLVectorVolumeNode"):
+        createNewVolume = True
+    if createNewVolume:
+      self.ui.outputVolumeNodeSelector.addNode("vtkMRMLScalarVolumeNode" if numberOfComponents == 1 else "vtkMRMLVectorVolumeNode")
+
     if not self.ui.inputFileSelector.currentPath:
       return
     self.saveParametersToSettings()      
     self.logic.updateImage(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
-      self.ui.pixelTypeComboBox.currentText,
+      pixelTypeString,
       self.ui.endiannessComboBox.currentText,
       toLong(self.ui.imageSizeXSliderWidget.value),
       toLong(self.ui.imageSizeYSliderWidget.value),
@@ -253,13 +264,13 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     Reads image into output volume
     """
     
-    scalarType = RawImageGuessLogic.scalarTypeFromString(pixelTypeString)
-    sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType)
+    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
+    sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
     totalHeaderSize = headerSize + skipSlices * sliceSize
     import os
     totalFilesize = os.path.getsize(imageFilePath)
     voxelDataSize = totalFilesize - totalHeaderSize
-    maxNumberOfSlices = voxelDataSize/sliceSize
+    maxNumberOfSlices = int(voxelDataSize/sliceSize)
     finalSizeZ = min(sizeZ, maxNumberOfSlices)
 
     self.reader.SetFileName(imageFilePath)
@@ -270,6 +281,7 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     else:
       self.reader.SetDataByteOrderToBigEndian()
     self.reader.SetDataScalarType(scalarType)
+    self.reader.SetNumberOfScalarComponents(numberOfComponents)
     self.reader.SetHeaderSize(totalHeaderSize)
     self.reader.SetFileLowerLeft(True) # to match input from NRRD reader
     self.reader.Update()
@@ -290,8 +302,8 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     Reads image into output volume
     """
     
-    scalarType = RawImageGuessLogic.scalarTypeFromString(pixelTypeString)
-    sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType)
+    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
+    sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
     totalHeaderSize = headerSize + skipSlices * sliceSize
     import os
     totalFilesize = os.path.getsize(imageFilePath)
@@ -324,11 +336,18 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
         raise ValueError('Unknown scalar type')
       headerFile.write("type: {0}\n".format(typeStr))
 
-      headerFile.write("dimension: 3\n")
-      headerFile.write("space: left-posterior-superior\n")
-      headerFile.write("sizes: {0} {1} {2}\n".format(sizeX, sizeY, finalSizeZ))
-      headerFile.write("space directions: ({0}, 0.0, 0.0) (0.0, {1}, 0.0) (0.0, 0.0, {2})\n".format(spacingX, spacingY, spacingZ))
-      headerFile.write("kinds: domain domain domain\n")
+      if numberOfComponents == 1:
+        headerFile.write("dimension: 3\n")
+        headerFile.write("space: left-posterior-superior\n")
+        headerFile.write("sizes: {0} {1} {2}\n".format(sizeX, sizeY, finalSizeZ))
+        headerFile.write("space directions: ({0}, 0.0, 0.0) (0.0, {1}, 0.0) (0.0, 0.0, {2})\n".format(spacingX, spacingY, spacingZ))
+        headerFile.write("kinds: domain domain domain\n")
+      else:
+        headerFile.write("dimension: 4\n")
+        headerFile.write("space: left-posterior-superior\n")
+        headerFile.write("sizes: {3} {0} {1} {2}\n".format(sizeX, sizeY, finalSizeZ, numberOfComponents))
+        headerFile.write("space directions: ({0}, 0.0, 0.0) (0.0, {1}, 0.0) (0.0, 0.0, {2})\n".format(spacingX, spacingY, spacingZ))
+        headerFile.write("kinds: vector domain domain domain\n")
 
       if endiannessString == "Little endian":
         headerFile.write("endian: little\n")
@@ -345,19 +364,21 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     return nhdrFilename
 
   @staticmethod
-  def scalarTypeFromString(scalarTypeStr):
+  def scalarTypeComponentFromString(scalarTypeStr):
     if scalarTypeStr == "8 bit unsigned":
-      return vtk.VTK_UNSIGNED_CHAR
+      return (vtk.VTK_UNSIGNED_CHAR, 1)
     elif scalarTypeStr == "8 bit signed":
-      return vtk.VTK_SIGNED_CHAR
+      return (vtk.VTK_SIGNED_CHAR, 1)
     elif scalarTypeStr == "16 bit unsigned":
-      return vtk.VTK_UNSIGNED_SHORT
+      return (vtk.VTK_UNSIGNED_SHORT, 1)
     elif scalarTypeStr == "16 bit signed":
-      return vtk.VTK_SHORT
+      return (vtk.VTK_SHORT, 1)
     elif scalarTypeStr == "float":
-      return vtk.VTK_FLOAT
+      return (vtk.VTK_FLOAT, 1)
     elif scalarTypeStr == "double":
-      return vtk.VTK_DOUBLE
+      return (vtk.VTK_DOUBLE, 1)
+    elif scalarTypeStr == "24 bit RGB":
+      return (vtk.VTK_UNSIGNED_CHAR, 3)
 
 class RawImageGuessTest(ScriptedLoadableModuleTest):
   """
