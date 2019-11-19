@@ -85,6 +85,11 @@
        <string>double</string>
       </property>
      </item>
+     <item>
+      <property name="text">
+       <string>24 bit RGB</string>
+      </property>
+     </item>
     </widget>
    </item>
    <item row="5" column="0">
@@ -449,6 +454,7 @@
      <property name="nodeTypes">
       <stringlist>
        <string>vtkMRMLScalarVolumeNode</string>
+       <string>vtkMRMLVectorVolumeNode</string>
       </stringlist>
      </property>
      <property name="showChildNodeTypes">
