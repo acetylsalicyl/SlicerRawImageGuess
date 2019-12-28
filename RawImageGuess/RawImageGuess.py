@@ -52,7 +52,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     uiWidget = slicer.util.loadUI(self.resourcePath('UI/RawImageGuess.ui'))
     self.layout.addWidget(uiWidget)
     self.ui = slicer.util.childWidgetVariables(uiWidget)
-    
+
     self.ui.outputVolumeNodeSelector.setMRMLScene(slicer.mrmlScene)
 
     self.updateButtonStates()
@@ -90,10 +90,10 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     # disable auto-update when exiting the module to prevent accidental
     # updates of other volumes (when the current output volume is deleted)
     self.ui.updateButton.checkState = qt.Qt.Unchecked
-  
+
   def onCurrentPathChanged(self, path):
     self.ui.inputFileSelector.addCurrentPathToHistory()
-    if not self.ui.outputVolumeNodeSelector.currentNode(): 
+    if not self.ui.outputVolumeNodeSelector.currentNode():
       return
     if self.ui.updateButton.checkState == qt.Qt.Checked:
       self.onUpdate()
@@ -137,7 +137,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     settings = qt.QSettings()
     settings.setValue('RawImageGuess/pixelType', self.ui.pixelTypeComboBox.currentText)
     settings.setValue('RawImageGuess/endianness', self.ui.endiannessComboBox.currentText)
-    settings.setValue('RawImageGuess/headerSize', self.ui.imageSkipSliderWidget.value)    
+    settings.setValue('RawImageGuess/headerSize', self.ui.imageSkipSliderWidget.value)
     settings.setValue('RawImageGuess/sizeX', self.ui.imageSizeXSliderWidget.value)
     settings.setValue('RawImageGuess/sizeY', self.ui.imageSizeYSliderWidget.value)
     settings.setValue('RawImageGuess/sizeZ', self.ui.imageSizeZSliderWidget.value)
@@ -179,7 +179,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
       return
     if not self.ui.inputFileSelector.currentPath:
       return
-    self.saveParametersToSettings()      
+    self.saveParametersToSettings()
     generatedFilename = self.logic.generateImageHeader(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
@@ -214,7 +214,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
 
     if not self.ui.inputFileSelector.currentPath:
       return
-    self.saveParametersToSettings()      
+    self.saveParametersToSettings()
     self.logic.updateImage(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
@@ -243,7 +243,7 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
   Uses ScriptedLoadableModuleLogic base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
-  
+
   def __init__(self):
     self.reader = vtk.vtkImageReader2()
 
@@ -260,7 +260,7 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     """
     Reads image into output volume
     """
-    
+
     (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
     sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
     totalHeaderSize = headerSize + skipSlices * sliceSize
@@ -298,14 +298,14 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     """
     Reads image into output volume
     """
-    
+
     (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
     sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
     totalHeaderSize = headerSize + skipSlices * sliceSize
     import os
     totalFilesize = os.path.getsize(imageFilePath)
     voxelDataSize = totalFilesize - totalHeaderSize
-    maxNumberOfSlices = voxelDataSize/sliceSize
+    maxNumberOfSlices = int(voxelDataSize/sliceSize)
     finalSizeZ = min(sizeZ, maxNumberOfSlices)
 
     import os
@@ -357,7 +357,7 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
       if totalHeaderSize > 0:
         headerFile.write("byte skip: {0}\n".format(totalHeaderSize))
       headerFile.write("data file: {0}\n".format(os.path.basename(imageFilePath)))
-    
+
     return nhdrFilename
 
   @staticmethod
@@ -408,17 +408,38 @@ class RawImageGuessTest(ScriptedLoadableModuleTest):
     """
 
     self.delayDisplay("Starting the test")
-    #
-    # first, get some data
-    #
+
+    # Download an image
     import SampleData
-    SampleData.downloadFromURL(
+    volumeNode = SampleData.downloadFromURL(
       nodeNames='FA',
       fileNames='FA.nrrd',
-      uris='http://slicer.kitware.com/midas3/download?items=5767')
-    self.delayDisplay('Finished with download and loading')
+      uris='http://slicer.kitware.com/midas3/download?items=5767')[0]
+    self.assertIsNotNone(volumeNode)
 
-    volumeNode = slicer.util.getNode(pattern="FA")
+    # Save image without compression
+    volumeNode.AddDefaultStorageNode()
+    storageNode = volumeNode.GetStorageNode()
+    inputFileName = os.path.join(slicer.app.temporaryPath, 'some-uncompressed-file.nrrd')
+    storageNode.SetFileName(inputFileName)
+    storageNode.UseCompressionOff()
+    self.assertTrue(storageNode.WriteData(volumeNode))
+
+    # Import the raw image
     logic = RawImageGuessLogic()
-    self.assertIsNotNone( logic.hasImageData(volumeNode) )
+    pixelTypeString = "floar"
+    outputVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
+    logic.updateImage(outputVolumeNode, inputFileName,
+      "float", "Little endian", 256, 256, 51,
+      361, 0,
+      1.0, 1.0, 2.6)
+    # Check if voxel values are valid
+    dims = outputVolumeNode.GetImageData().GetDimensions()
+    self.assertEqual(dims[0], 256)
+    self.assertEqual(dims[1], 256)
+    self.assertEqual(dims[2], 51)
+    scalarRange = outputVolumeNode.GetImageData().GetScalarRange()
+    self.assertAlmostEqual(scalarRange[0], 0.0)
+    self.assertAlmostEqual(scalarRange[1], 0.9950811862945557)
+
     self.delayDisplay('Test passed!')
