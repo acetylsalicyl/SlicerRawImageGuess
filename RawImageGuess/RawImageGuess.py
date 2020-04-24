@@ -93,6 +93,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
 
   def onCurrentPathChanged(self, path):
     self.ui.inputFileSelector.addCurrentPathToHistory()
+    self.updateButtonStates()
     if not self.ui.outputVolumeNodeSelector.currentNode():
       return
     if self.ui.updateButton.checkState == qt.Qt.Checked:
