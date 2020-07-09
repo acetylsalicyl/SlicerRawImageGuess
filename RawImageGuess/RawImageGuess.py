@@ -70,6 +70,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.imageSpacingYSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSpacingZSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.pixelTypeComboBox.connect('currentIndexChanged(int)', self.onImageSizeChanged)
+    self.ui.numberOfVolumesSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.fitToViewsCheckBox.connect("toggled(bool)", self.onFitToViewsCheckboxClicked)
     self.ui.updateButton.connect("clicked()", self.onUpdateButtonClicked)
     self.ui.updateButton.connect("checkBoxToggled(bool)", self.onUpdateCheckboxClicked)
@@ -144,8 +145,9 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     settings.setValue('RawImageGuess/sizeZ', self.ui.imageSizeZSliderWidget.value)
     settings.setValue('RawImageGuess/skipSlices', self.ui.skipSlicesSliderWidget.value)
     settings.setValue('RawImageGuess/spacingX', self.ui.imageSpacingXSliderWidget.value)
-    settings.setValue('RawImageGuess/spacingY', self.ui.imageSpacingXSliderWidget.value)
-    settings.setValue('RawImageGuess/spacingZ', self.ui.imageSpacingXSliderWidget.value)
+    settings.setValue('RawImageGuess/spacingY', self.ui.imageSpacingYSliderWidget.value)
+    settings.setValue('RawImageGuess/spacingZ', self.ui.imageSpacingZSliderWidget.value)
+    settings.setValue('RawImageGuess/numberOfVolumes', self.ui.numberOfVolumesSliderWidget.value)
 
   def loadParametersFromSettings(self):
     settings = qt.QSettings()
@@ -159,6 +161,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.imageSpacingXSliderWidget.value = float(settings.value('RawImageGuess/spacingX', 1.0))
     self.ui.imageSpacingYSliderWidget.value = float(settings.value('RawImageGuess/spacingY', 1.0))
     self.ui.imageSpacingZSliderWidget.value = float(settings.value('RawImageGuess/spacingZ', 1.0))
+    self.ui.numberOfVolumesSliderWidget.value = toLong(settings.value('RawImageGuess/numberOfVolumes', 1.0))
 
   def onFitToViewsCheckboxClicked(self, enable):
     self.showOutputVolume()
@@ -193,7 +196,8 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
       toLong(self.ui.skipSlicesSliderWidget.value),
       float(self.ui.imageSpacingXSliderWidget.value),
       float(self.ui.imageSpacingYSliderWidget.value),
-      float(self.ui.imageSpacingZSliderWidget.value)
+      float(self.ui.imageSpacingZSliderWidget.value),
+      toLong(self.ui.numberOfVolumesSliderWidget.value)
       )
     slicer.util.delayDisplay("Image header file created at "+generatedFilename, autoCloseMsec=2000)
 
@@ -295,11 +299,13 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
 
   def generateImageHeader(self, outputVolumeNode, imageFilePath,
       pixelTypeString, endiannessString, sizeX, sizeY, sizeZ, headerSize, skipSlices,
-      spacingX, spacingY, spacingZ):
+      spacingX, spacingY, spacingZ, numberOfVolumes=1):
     """
     Reads image into output volume
     """
 
+    # Trim sizeZ and numberOfVolumes to maximum available data size (the reader would refuse loading completely
+    # if there is not enough voxel data)
     (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
     sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
     totalHeaderSize = headerSize + skipSlices * sliceSize
@@ -308,10 +314,15 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     voxelDataSize = totalFilesize - totalHeaderSize
     maxNumberOfSlices = int(voxelDataSize/sliceSize)
     finalSizeZ = min(sizeZ, maxNumberOfSlices)
+    maxNumberOfVolumes = int(voxelDataSize/sliceSize/finalSizeZ)
+    finalNumberOfVolumes = min(numberOfVolumes, maxNumberOfVolumes)
 
     import os
     filename, file_extension = os.path.splitext(imageFilePath)
-    nhdrFilename = filename + ".nhdr"
+    if finalNumberOfVolumes > 1:
+      nhdrFilename = filename + ".seq.nhdr"
+    else:
+      nhdrFilename = filename + ".nhdr"
 
     with open(nhdrFilename, "w") as headerFile:
       headerFile.write("NRRD0004\n")
@@ -334,18 +345,27 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
         raise ValueError('Unknown scalar type')
       headerFile.write("type: {0}\n".format(typeStr))
 
-      if numberOfComponents == 1:
-        headerFile.write("dimension: 3\n")
-        headerFile.write("space: left-posterior-superior\n")
-        headerFile.write("sizes: {0} {1} {2}\n".format(sizeX, sizeY, finalSizeZ))
-        headerFile.write("space directions: ({0}, 0.0, 0.0) (0.0, {1}, 0.0) (0.0, 0.0, {2})\n".format(spacingX, spacingY, spacingZ))
-        headerFile.write("kinds: domain domain domain\n")
-      else:
-        headerFile.write("dimension: 4\n")
-        headerFile.write("space: left-posterior-superior\n")
-        headerFile.write("sizes: {3} {0} {1} {2}\n".format(sizeX, sizeY, finalSizeZ, numberOfComponents))
-        headerFile.write("space directions: ({0}, 0.0, 0.0) (0.0, {1}, 0.0) (0.0, 0.0, {2})\n".format(spacingX, spacingY, spacingZ))
-        headerFile.write("kinds: vector domain domain domain\n")
+      # Determine dimension, sizes, and kinds (dependent of number of components and volumes)
+      dimension = 3
+      sizesStr = "{0} {1} {2}".format(sizeX, sizeY, finalSizeZ)
+      spaceDirectionsStr = "({0}, 0.0, 0.0) (0.0, {1}, 0.0) (0.0, 0.0, {2})".format(spacingX, spacingY, spacingZ)
+      kindsStr = "domain domain domain"
+      if numberOfComponents > 1:
+        dimension += 1
+        sizesStr = "{0} ".format(numberOfComponents) + sizesStr
+        spaceDirectionsStr = "none " + spaceDirectionsStr
+        kindsStr = "vector " + kindsStr
+      if finalNumberOfVolumes > 1:
+        dimension += 1
+        sizesStr = sizesStr + " {0}".format(finalNumberOfVolumes)
+        spaceDirectionsStr = spaceDirectionsStr + " none"
+        kindsStr = kindsStr + " list"
+
+      headerFile.write("dimension: {0}\n".format(dimension))
+      headerFile.write("space: left-posterior-superior\n")
+      headerFile.write("sizes: {0}\n".format(sizesStr))
+      headerFile.write("space directions: {0}\n".format(spaceDirectionsStr))
+      headerFile.write("kinds: {0}\n".format(kindsStr))
 
       if endiannessString == "Little endian":
         headerFile.write("endian: little\n")
