@@ -76,6 +76,35 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.updateButton.connect("checkBoxToggled(bool)", self.onUpdateCheckboxClicked)
     self.ui.generateNrrdHeaderButton.connect("clicked()", self.onGenerateNrrdHeaderButtonClicked)
 
+    self.ui.imageSkipSubColumnButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('sub', 'column'))
+    self.ui.imageSkipAddColumnButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('add', 'column'))
+    self.ui.imageSkipSubRowButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('sub', 'row'))
+    self.ui.imageSkipAddRowButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('add', 'row'))
+    self.ui.imageSkipSubSliceButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('sub', 'slice'))
+    self.ui.imageSkipAddSliceButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('add', 'slice'))
+    self.ui.imageSkipSubVolumeButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('sub', 'volume'))
+    self.ui.imageSkipAddVolumeButton.connect("clicked()", lambda: self.onOffsetImageSkipButtonClicked('add', 'volume'))
+    
+    self.ui.imageSkipMin.connect('valueChanged(int)', lambda value, widget=self.ui.imageSkipSliderWidget, settingName="headerSize", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSkipMax.connect('valueChanged(int)', lambda value, widget=self.ui.imageSkipSliderWidget, settingName="headerSize", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+
+    self.ui.imageSizeMin.connect('valueChanged(int)', lambda value, widget=self.ui.imageSizeXSliderWidget, settingName="size", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSizeMax.connect('valueChanged(int)', lambda value, widget=self.ui.imageSizeXSliderWidget, settingName="size", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSizeMin.connect('valueChanged(int)', lambda value, widget=self.ui.imageSizeYSliderWidget, settingName="size", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSizeMax.connect('valueChanged(int)', lambda value, widget=self.ui.imageSizeYSliderWidget, settingName="size", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSizeMin.connect('valueChanged(int)', lambda value, widget=self.ui.imageSizeZSliderWidget, settingName="size", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSizeMax.connect('valueChanged(int)', lambda value, widget=self.ui.imageSizeZSliderWidget, settingName="size", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+
+    self.ui.skipSlicesMin.connect('valueChanged(int)', lambda value, widget=self.ui.skipSlicesSliderWidget, settingName="skipSlices", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.skipSlicesMin.connect('valueChanged(int)', lambda value, widget=self.ui.skipSlicesSliderWidget, settingName="skipSlices", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+
+    self.ui.imageSpacingMin.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingXSliderWidget, settingName="spacing", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSpacingMax.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingXSliderWidget, settingName="spacing", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSpacingMin.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingYSliderWidget, settingName="spacing", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSpacingMax.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingYSliderWidget, settingName="spacing", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSpacingMin.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingZSliderWidget, settingName="spacing", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.imageSpacingMax.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingZSliderWidget, settingName="spacing", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -91,6 +120,15 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     # disable auto-update when exiting the module to prevent accidental
     # updates of other volumes (when the current output volume is deleted)
     self.ui.updateButton.checkState = qt.Qt.Unchecked
+
+  def updateWidgetRange(self, value, widget, settingName, mode):
+    settings = qt.QSettings()
+    if mode=='min':
+      widget.minimum = value
+      settings.setValue('RawImageGuess/'+settingName+'Min', value)
+    else:
+      widget.maximum = value
+      settings.setValue('RawImageGuess/'+settingName+'Max', value)
 
   def onCurrentPathChanged(self, path):
     self.ui.inputFileSelector.addCurrentPathToHistory()
@@ -151,6 +189,16 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
 
   def loadParametersFromSettings(self):
     settings = qt.QSettings()
+
+    self.ui.imageSkipMin.value = toLong(settings.value('RawImageGuess/headerSizeMin', 0))
+    self.ui.imageSkipMax.value = toLong(settings.value('RawImageGuess/headerSizeMax', 10000))
+    self.ui.imageSizeMin.value = toLong(settings.value('RawImageGuess/sizeMin', 0))
+    self.ui.imageSizeMax.value = toLong(settings.value('RawImageGuess/sizeMax', 1200))
+    self.ui.skipSlicesMin.value = toLong(settings.value('RawImageGuess/skipSlicesMin', 0))
+    self.ui.skipSlicesMin.value = toLong(settings.value('RawImageGuess/skipSlicesMax', 100))
+    self.ui.imageSpacingMin.value = float(settings.value('RawImageGuess/spacingMin', 0.0))
+    self.ui.imageSpacingMax.value = float(settings.value('RawImageGuess/spacingMax', 5.0))
+
     self.ui.pixelTypeComboBox.currentText = settings.value('RawImageGuess/pixelType')
     self.ui.endiannessComboBox.currentText = settings.value('RawImageGuess/endianness')
     self.ui.imageSkipSliderWidget.value = toLong(settings.value('RawImageGuess/headerSize', 0))
@@ -162,6 +210,24 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.imageSpacingYSliderWidget.value = float(settings.value('RawImageGuess/spacingY', 1.0))
     self.ui.imageSpacingZSliderWidget.value = float(settings.value('RawImageGuess/spacingZ', 1.0))
     self.ui.numberOfVolumesSliderWidget.value = toLong(settings.value('RawImageGuess/numberOfVolumes', 1.0))
+
+  def onOffsetImageSkipButtonClicked(self, operation, mode):
+    if mode == 'column':
+      offset = 1
+    elif mode == 'row':
+      offset = toLong(self.ui.imageSizeXSliderWidget.value)
+    elif mode == 'slice':
+      offset = toLong(self.ui.imageSizeXSliderWidget.value) * toLong(self.ui.imageSizeYSliderWidget.value)
+    elif mode == 'volume':
+      offset = toLong(self.ui.imageSizeXSliderWidget.value) * toLong(self.ui.imageSizeYSliderWidget.value) * toLong(self.ui.imageSizeZSliderWidget.value)
+
+    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(self.ui.pixelTypeComboBox.currentText)
+    offset *=  vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
+
+    if operation == 'sub':
+      self.ui.imageSkipSliderWidget.value -= offset
+    else:
+      self.ui.imageSkipSliderWidget.value += offset
 
   def onFitToViewsCheckboxClicked(self, enable):
     self.showOutputVolume()

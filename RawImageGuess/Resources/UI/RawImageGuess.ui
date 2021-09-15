@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>UtilTest</class>
- <widget class="QWidget" name="UtilTest">
+ <class>RawImageGuess</class>
+ <widget class="QWidget" name="RawImageGuess">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>393</width>
-    <height>422</height>
+    <width>471</width>
+    <height>522</height>
    </rect>
   </property>
   <property name="toolTip">
    <string>Set endianness</string>
   </property>
-  <layout class="QFormLayout" name="formLayout">
-   <item row="1" column="0">
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
     <widget class="QLabel" name="label">
      <property name="toolTip">
       <string>Choose the input file</string>
@@ -24,7 +24,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
+   <item row="0" column="1">
     <widget class="ctkPathLineEdit" name="inputFileSelector">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
@@ -40,413 +40,14 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_4">
-     <property name="toolTip">
-      <string>Set the bit depth for the volume.</string>
-     </property>
-     <property name="text">
-      <string>Pixel type:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="ctkComboBox" name="pixelTypeComboBox">
-     <property name="toolTip">
-      <string>Set the image pixel bit depth</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>8 bit unsigned</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>8 bit signed</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>16 bit unsigned</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>16 bit signed</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>float</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>double</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>24 bit RGB</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_5">
-     <property name="toolTip">
-      <string>Set endianness</string>
-     </property>
-     <property name="text">
-      <string>Endianness:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1">
-    <widget class="QComboBox" name="endiannessComboBox">
-     <property name="toolTip">
-      <string>Set endianness</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>Big endian</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Little endian</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="imageSkipLabel">
-     <property name="toolTip">
-      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
-     </property>
-     <property name="text">
-      <string>Header size:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="ctkSliderWidget" name="imageSkipSliderWidget">
-     <property name="toolTip">
-      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
-     </property>
-     <property name="toolTipDuration">
-      <number>11</number>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>1000000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="imageSizeXLabel">
-     <property name="toolTip">
-      <string>Set the image dimensions on the X axis</string>
-     </property>
-     <property name="text">
-      <string>X dimension:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="1">
-    <widget class="ctkSliderWidget" name="imageSizeXSliderWidget">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Set the image dimensions on the X axis</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>200.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="imageSizeYLabel">
-     <property name="toolTip">
-      <string>Set the image dimensions on the Y axis</string>
-     </property>
-     <property name="text">
-      <string>Y dimension:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1">
-    <widget class="ctkSliderWidget" name="imageSizeYSliderWidget">
-     <property name="toolTip">
-      <string>Set the image dimensions on the Y axis</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>200.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="0">
-    <widget class="QLabel" name="imageSizeZLabel">
-     <property name="toolTip">
-      <string>Set the number of slices for the volume.</string>
-     </property>
-     <property name="text">
-      <string>Z dimension:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="1">
-    <widget class="ctkSliderWidget" name="imageSizeZSliderWidget">
-     <property name="toolTip">
-      <string>Set the number of slices for the volume.</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>1.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="10" column="0">
-    <widget class="QLabel" name="skipSlicesLabel">
-     <property name="toolTip">
-      <string>Skip this many number of slices before adding the first slice to the ouput volume.</string>
-     </property>
-     <property name="text">
-      <string>Skip slices:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="10" column="1">
-    <widget class="ctkSliderWidget" name="skipSlicesSliderWidget">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Skip this many number of slices before adding the first slice to the ouput volume.</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="singleStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.000000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="0">
-    <widget class="QLabel" name="imageSpacingXLabel">
-     <property name="toolTip">
-      <string>Size of a voxel along X axis.</string>
-     </property>
-     <property name="text">
-      <string>X spacing:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="1">
-    <widget class="qMRMLSliderWidget" name="imageSpacingXSliderWidget">
-     <property name="toolTip">
-      <string>Size of a voxel along X axis</string>
-     </property>
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="singleStep">
-      <double>0.100000000000000</double>
-     </property>
-     <property name="pageStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="popupSlider">
-      <bool>false</bool>
-     </property>
-     <property name="quantity">
-      <string>Length</string>
-     </property>
-    </widget>
-   </item>
-   <item row="12" column="0">
-    <widget class="QLabel" name="imageSpacingYLabel">
-     <property name="toolTip">
-      <string>Size of a voxel along X axis.</string>
-     </property>
-     <property name="text">
-      <string>Y spacing:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="12" column="1">
-    <widget class="qMRMLSliderWidget" name="imageSpacingYSliderWidget">
-     <property name="toolTip">
-      <string>Size of a voxel along X axis</string>
-     </property>
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="singleStep">
-      <double>0.100000000000000</double>
-     </property>
-     <property name="pageStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="quantity">
-      <string>Length</string>
-     </property>
-    </widget>
-   </item>
-   <item row="13" column="0">
-    <widget class="QLabel" name="imageSpacingZLabel">
-     <property name="toolTip">
-      <string>Size of a voxel along X axis.</string>
-     </property>
-     <property name="text">
-      <string>Z spacing:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="13" column="1">
-    <widget class="qMRMLSliderWidget" name="imageSpacingZSliderWidget">
-     <property name="toolTip">
-      <string>Size of a voxel along X axis</string>
-     </property>
-     <property name="decimals">
-      <number>3</number>
-     </property>
-     <property name="singleStep">
-      <double>0.100000000000000</double>
-     </property>
-     <property name="pageStep">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="popupSlider">
-      <bool>false</bool>
-     </property>
-     <property name="quantity">
-      <string>Length</string>
-     </property>
-    </widget>
-   </item>
-   <item row="15" column="0">
-    <widget class="QLabel" name="fitToViewsLabel">
-     <property name="toolTip">
-      <string>Zoom and pan slice views on update to show the entire output volume.</string>
-     </property>
-     <property name="text">
-      <string>Fit output in views:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="15" column="1">
-    <widget class="QCheckBox" name="fitToViewsCheckBox">
-     <property name="toolTip">
-      <string>Zoom and pan slice views on update to show the entire output volume.</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="17" column="0" colspan="2">
-    <widget class="ctkCheckablePushButton" name="updateButton">
-     <property name="toolTip">
-      <string>Update view</string>
-     </property>
-     <property name="text">
-      <string>Update</string>
-     </property>
-     <property name="checkState">
-      <enum>Qt::Unchecked</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="18" column="0" colspan="2">
-    <widget class="QPushButton" name="generateNrrdHeaderButton">
-     <property name="text">
-      <string>Generate NRRD image header</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
+   <item row="1" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Output volume:</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
+   <item row="1" column="1">
     <widget class="qMRMLNodeComboBox" name="outputVolumeNodeSelector">
      <property name="toolTip">
       <string>Pick the output to the algorithm.</string>
@@ -477,7 +78,481 @@
      </property>
     </widget>
    </item>
-   <item row="14" column="0">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="toolTip">
+      <string>Set the bit depth for the volume.</string>
+     </property>
+     <property name="text">
+      <string>Pixel type:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="ctkComboBox" name="pixelTypeComboBox">
+       <property name="toolTip">
+        <string>Set the image pixel bit depth</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>8 bit unsigned</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>8 bit signed</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>16 bit unsigned</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>16 bit signed</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>float</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>double</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>24 bit RGB</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="endiannessComboBox">
+       <property name="toolTip">
+        <string>Set endianness</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Big endian</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Little endian</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="imageSkipLabel">
+     <property name="toolTip">
+      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
+     </property>
+     <property name="text">
+      <string>Header size:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="ctkSliderWidget" name="imageSkipSliderWidget">
+     <property name="toolTip">
+      <string>If the file has a header, it can be skipped. Set the number of bytes to skip here.</string>
+     </property>
+     <property name="toolTipDuration">
+      <number>11</number>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10000.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Offset: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipSubColumnButton">
+       <property name="toolTip">
+        <string>Offset header size by a single pixel</string>
+       </property>
+       <property name="text">
+        <string>-X</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipAddColumnButton">
+       <property name="toolTip">
+        <string>Offset header size by a single pixel</string>
+       </property>
+       <property name="text">
+        <string>+X</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipSubRowButton">
+       <property name="toolTip">
+        <string>Offset header size by a row of pixels</string>
+       </property>
+       <property name="text">
+        <string>-Y</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipAddRowButton">
+       <property name="toolTip">
+        <string>Offset header size by a row of pixels</string>
+       </property>
+       <property name="text">
+        <string>+Y</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipSubSliceButton">
+       <property name="toolTip">
+        <string>Offset header size by a slice of pixels</string>
+       </property>
+       <property name="text">
+        <string>-Z</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipAddSliceButton">
+       <property name="toolTip">
+        <string>Offset header size by a slice of pixels</string>
+       </property>
+       <property name="text">
+        <string>+Z</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipSubVolumeButton">
+       <property name="toolTip">
+        <string>Offset header size by a single volume of pixels</string>
+       </property>
+       <property name="text">
+        <string>-volume</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="imageSkipAddVolumeButton">
+       <property name="toolTip">
+        <string>Offset header size by a single volume of pixels</string>
+       </property>
+       <property name="text">
+        <string>+volume</string>
+       </property>
+       <property name="autoRepeat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="imageSizeXLabel">
+     <property name="toolTip">
+      <string>Set the image dimensions on the X axis</string>
+     </property>
+     <property name="text">
+      <string>X dimension:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="ctkSliderWidget" name="imageSizeXSliderWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Set the image dimensions on the X axis</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1200.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>200.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="imageSizeYLabel">
+     <property name="toolTip">
+      <string>Set the image dimensions on the Y axis</string>
+     </property>
+     <property name="text">
+      <string>Y dimension:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="ctkSliderWidget" name="imageSizeYSliderWidget">
+     <property name="toolTip">
+      <string>Set the image dimensions on the Y axis</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1200.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>200.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="imageSizeZLabel">
+     <property name="toolTip">
+      <string>Set the number of slices for the volume.</string>
+     </property>
+     <property name="text">
+      <string>Z dimension:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="ctkSliderWidget" name="imageSizeZSliderWidget">
+     <property name="toolTip">
+      <string>Set the number of slices for the volume.</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1200.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="skipSlicesLabel">
+     <property name="toolTip">
+      <string>Skip this many number of slices before adding the first slice to the ouput volume.</string>
+     </property>
+     <property name="text">
+      <string>Skip slices:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="ctkSliderWidget" name="skipSlicesSliderWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Skip this many number of slices before adding the first slice to the ouput volume.</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>100.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="imageSpacingXLabel">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis.</string>
+     </property>
+     <property name="text">
+      <string>X spacing:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="qMRMLSliderWidget" name="imageSpacingXSliderWidget">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="pageStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="popupSlider">
+      <bool>false</bool>
+     </property>
+     <property name="quantity">
+      <string>Length</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="imageSpacingYLabel">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis.</string>
+     </property>
+     <property name="text">
+      <string>Y spacing:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1">
+    <widget class="qMRMLSliderWidget" name="imageSpacingYSliderWidget">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="pageStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="quantity">
+      <string>Length</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="imageSpacingZLabel">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis.</string>
+     </property>
+     <property name="text">
+      <string>Z spacing:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="qMRMLSliderWidget" name="imageSpacingZSliderWidget">
+     <property name="toolTip">
+      <string>Size of a voxel along X axis</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="pageStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="popupSlider">
+      <bool>false</bool>
+     </property>
+     <property name="quantity">
+      <string>Length</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
     <widget class="QLabel" name="numberOfVolumesLabel">
      <property name="toolTip">
       <string>Set the number of slices for the volume.</string>
@@ -487,7 +562,7 @@
      </property>
     </widget>
    </item>
-   <item row="14" column="1">
+   <item row="12" column="1">
     <widget class="ctkSliderWidget" name="numberOfVolumesSliderWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
@@ -515,6 +590,193 @@
      </property>
     </widget>
    </item>
+   <item row="13" column="0">
+    <widget class="QLabel" name="fitToViewsLabel">
+     <property name="toolTip">
+      <string>Zoom and pan slice views on update to show the entire output volume.</string>
+     </property>
+     <property name="text">
+      <string>Fit output in views:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1">
+    <widget class="QCheckBox" name="fitToViewsCheckBox">
+     <property name="toolTip">
+      <string>Zoom and pan slice views on update to show the entire output volume.</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="0" colspan="2">
+    <widget class="QPushButton" name="generateNrrdHeaderButton">
+     <property name="text">
+      <string>Generate NRRD image header</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0" colspan="2">
+    <widget class="ctkCheckablePushButton" name="updateButton">
+     <property name="toolTip">
+      <string>Update view</string>
+     </property>
+     <property name="text">
+      <string>Update</string>
+     </property>
+     <property name="checkState">
+      <enum>Qt::Unchecked</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="0" colspan="2">
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton">
+     <property name="text">
+      <string>Advanced</string>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="imageSkipMin">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="singleStep">
+         <number>1000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Header size range:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="skipSlicesMin">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="singleStep">
+         <number>10</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QSpinBox" name="imageSkipMax">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="singleStep">
+         <number>1000</number>
+        </property>
+        <property name="value">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Dimensions range:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Skip slices range:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QSpinBox" name="imageSizeMax">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>1200</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QSpinBox" name="skipSlicesMax">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="singleStep">
+         <number>10</number>
+        </property>
+        <property name="value">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="imageSizeMin">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Spacing range:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="ctkDoubleSpinBox" name="imageSpacingMin">
+        <property name="decimalsOption">
+         <set>ctkDoubleSpinBox::DecimalsByKey|ctkDoubleSpinBox::DecimalsByShortcuts|ctkDoubleSpinBox::DecimalsByValue|ctkDoubleSpinBox::InsertDecimals</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="ctkDoubleSpinBox" name="imageSpacingMax">
+        <property name="decimalsOption">
+         <set>ctkDoubleSpinBox::DecimalsByKey|ctkDoubleSpinBox::DecimalsByShortcuts|ctkDoubleSpinBox::DecimalsByValue|ctkDoubleSpinBox::InsertDecimals</set>
+        </property>
+        <property name="value">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -524,9 +786,20 @@
    <header>ctkCheckablePushButton.h</header>
   </customwidget>
   <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>ctkComboBox</class>
    <extends>QComboBox</extends>
    <header>ctkComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ctkDoubleSpinBox</class>
+   <extends>QWidget</extends>
+   <header>ctkDoubleSpinBox.h</header>
   </customwidget>
   <customwidget>
    <class>ctkPathLineEdit</class>
