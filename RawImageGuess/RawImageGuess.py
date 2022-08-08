@@ -96,7 +96,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.imageSizeMax.connect('valueChanged(int)', lambda value, widget=self.ui.imageSizeZSliderWidget, settingName="size", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
 
     self.ui.skipSlicesMin.connect('valueChanged(int)', lambda value, widget=self.ui.skipSlicesSliderWidget, settingName="skipSlices", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
-    self.ui.skipSlicesMin.connect('valueChanged(int)', lambda value, widget=self.ui.skipSlicesSliderWidget, settingName="skipSlices", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
+    self.ui.skipSlicesMax.connect('valueChanged(int)', lambda value, widget=self.ui.skipSlicesSliderWidget, settingName="skipSlices", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
 
     self.ui.imageSpacingMin.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingXSliderWidget, settingName="spacing", mode='min': self.updateWidgetRange(value, widget, settingName, mode))
     self.ui.imageSpacingMax.connect('valueChanged(double)', lambda value, widget=self.ui.imageSpacingXSliderWidget, settingName="spacing", mode='max': self.updateWidgetRange(value, widget, settingName, mode))
@@ -195,7 +195,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.imageSizeMin.value = toLong(settings.value('RawImageGuess/sizeMin', 0))
     self.ui.imageSizeMax.value = toLong(settings.value('RawImageGuess/sizeMax', 1200))
     self.ui.skipSlicesMin.value = toLong(settings.value('RawImageGuess/skipSlicesMin', 0))
-    self.ui.skipSlicesMin.value = toLong(settings.value('RawImageGuess/skipSlicesMax', 100))
+    self.ui.skipSlicesMax.value = toLong(settings.value('RawImageGuess/skipSlicesMax', 100))
     self.ui.imageSpacingMin.value = float(settings.value('RawImageGuess/spacingMin', 0.0))
     self.ui.imageSpacingMax.value = float(settings.value('RawImageGuess/spacingMax', 5.0))
 
