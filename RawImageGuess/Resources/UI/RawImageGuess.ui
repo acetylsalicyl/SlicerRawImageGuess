@@ -130,6 +130,11 @@
          <string>24 bit RGB</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>1 bit</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
@@ -145,6 +150,23 @@
        <item>
         <property name="text">
          <string>Little endian</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="bitOrderComboBox">
+       <property name="toolTip">
+        <string>Select bit order for 1bpp: LSB-first or LSB-last (MSB-first).</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>LSB-first</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>LSB-last</string>
         </property>
        </item>
       </widget>

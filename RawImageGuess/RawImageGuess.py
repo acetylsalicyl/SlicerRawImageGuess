@@ -61,6 +61,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.ui.outputVolumeNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeSelected)
     self.ui.inputFileSelector.connect('currentPathChanged(QString)', self.onCurrentPathChanged)
     self.ui.endiannessComboBox.connect('currentIndexChanged(int)', self.onImageSizeChanged)
+    self.ui.bitOrderComboBox.connect('currentIndexChanged(int)', self.onImageSizeChanged)
     self.ui.imageSkipSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeXSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
     self.ui.imageSizeYSliderWidget.connect('valueChanged(double)', self.onImageSizeChanged)
@@ -108,6 +109,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     # Add vertical spacer
     self.layout.addStretch(1)
 
+    self.updateBitOrderControlsVisibility()
     self.loadParametersFromSettings()
 
   def cleanup(self):
@@ -120,6 +122,32 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     # disable auto-update when exiting the module to prevent accidental
     # updates of other volumes (when the current output volume is deleted)
     self.ui.updateButton.checkState = qt.Qt.Unchecked
+
+  def scalarTypeComponentBigEndianLsbFirst(self):
+    scalarTypeStr = self.ui.pixelTypeComboBox.currentText
+    components = 1
+    if scalarTypeStr == "8 bit unsigned":
+      scalarType = vtk.VTK_UNSIGNED_CHAR
+    elif scalarTypeStr == "8 bit signed":
+      scalarType = vtk.VTK_SIGNED_CHAR
+    elif scalarTypeStr == "16 bit unsigned":
+      scalarType = vtk.VTK_UNSIGNED_SHORT
+    elif scalarTypeStr == "16 bit signed":
+      scalarType = vtk.VTK_SHORT
+    elif scalarTypeStr == "float":
+      scalarType = vtk.VTK_FLOAT
+    elif scalarTypeStr == "double":
+      scalarType = vtk.VTK_DOUBLE
+    elif scalarTypeStr == "24 bit RGB":
+      scalarType = vtk.VTK_UNSIGNED_CHAR
+      components = 3
+    elif scalarTypeStr == "1 bit":
+      scalarType = vtk.VTK_BIT
+
+    bigEndian = self.ui.endiannessComboBox.currentText.lower() == "big endian"
+    lsbFirst = self.ui.bitOrderComboBox.currentText.lower() == 'lsb-first'
+
+    return (scalarType, components, bigEndian, lsbFirst)
 
   def updateWidgetRange(self, value, widget, settingName, mode):
     settings = qt.QSettings()
@@ -169,14 +197,24 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
       self.showOutputVolume()
 
   def onImageSizeChanged(self, value):
+    # Keep bit-order controls visible only for 1bpp
+    self.updateBitOrderControlsVisibility()
     if self.ui.updateButton.checkState == qt.Qt.Checked:
       self.onUpdate()
       self.showOutputVolume()
+
+  def updateBitOrderControlsVisibility(self):
+    # Show LSB combobox for 1 bit images, show endianness combobox for other types
+    (scalarType, numberOfComponents, bigEndian, lsbFirst) = self.scalarTypeComponentBigEndianLsbFirst()
+    isBit = (scalarType == vtk.VTK_BIT)
+    self.ui.bitOrderComboBox.visible = isBit
+    self.ui.endiannessComboBox.visible = not isBit
 
   def saveParametersToSettings(self):
     settings = qt.QSettings()
     settings.setValue('RawImageGuess/pixelType', self.ui.pixelTypeComboBox.currentText)
     settings.setValue('RawImageGuess/endianness', self.ui.endiannessComboBox.currentText)
+    settings.setValue('RawImageGuess/bitOrder', self.ui.bitOrderComboBox.currentText)
     settings.setValue('RawImageGuess/headerSize', self.ui.imageSkipSliderWidget.value)
     settings.setValue('RawImageGuess/sizeX', self.ui.imageSizeXSliderWidget.value)
     settings.setValue('RawImageGuess/sizeY', self.ui.imageSizeYSliderWidget.value)
@@ -201,6 +239,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
 
     self.ui.pixelTypeComboBox.currentText = settings.value('RawImageGuess/pixelType')
     self.ui.endiannessComboBox.currentText = settings.value('RawImageGuess/endianness')
+    self.ui.bitOrderComboBox.currentText = settings.value('RawImageGuess/bitOrder')
     self.ui.imageSkipSliderWidget.value = toLong(settings.value('RawImageGuess/headerSize', 0))
     self.ui.imageSizeXSliderWidget.value = toLong(settings.value('RawImageGuess/sizeX', 200))
     self.ui.imageSizeYSliderWidget.value = toLong(settings.value('RawImageGuess/sizeY', 200))
@@ -221,8 +260,9 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     elif mode == 'volume':
       offset = toLong(self.ui.imageSizeXSliderWidget.value) * toLong(self.ui.imageSizeYSliderWidget.value) * toLong(self.ui.imageSizeZSliderWidget.value)
 
-    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(self.ui.pixelTypeComboBox.currentText)
-    offset *=  vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
+    (scalarType, numberOfComponents, bigEndian, lsbFirst) = self.scalarTypeComponentBigEndianLsbFirst()
+    if scalarType != vtk.VTK_BIT:
+      offset *=  vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
 
     if operation == 'sub':
       self.ui.imageSkipSliderWidget.value -= offset
@@ -249,12 +289,18 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
       return
     if not self.ui.inputFileSelector.currentPath:
       return
+    (scalarType, numberOfComponents, bigEndian, lsbFirst) = self.scalarTypeComponentBigEndianLsbFirst()
+    if scalarType == vtk.VTK_BIT:
+      slicer.util.errorDisplay("NRRD file format cannot store 1 bit per pixel images. Read the image and then save it into a new file.")
+      return
     self.saveParametersToSettings()
     generatedFilename = self.logic.generateImageHeader(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
-      self.ui.pixelTypeComboBox.currentText,
-      self.ui.endiannessComboBox.currentText,
+      scalarType,
+      numberOfComponents,
+      bigEndian,
+      lsbFirst,
       toLong(self.ui.imageSizeXSliderWidget.value),
       toLong(self.ui.imageSizeYSliderWidget.value),
       toLong(self.ui.imageSizeZSliderWidget.value),
@@ -274,7 +320,7 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     # Determine if we need to create a new volume
     createNewVolume = False
     pixelTypeString = self.ui.pixelTypeComboBox.currentText
-    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
+    (scalarType, numberOfComponents, bigEndian, lsbFirst) = self.scalarTypeComponentBigEndianLsbFirst()
     if not self.ui.outputVolumeNodeSelector.currentNode():
       createNewVolume = True
     else:
@@ -289,8 +335,10 @@ class RawImageGuessWidget(ScriptedLoadableModuleWidget):
     self.logic.updateImage(
       self.ui.outputVolumeNodeSelector.currentNode(),
       self.ui.inputFileSelector.currentPath,
-      pixelTypeString,
-      self.ui.endiannessComboBox.currentText,
+      scalarType,
+      numberOfComponents,
+      bigEndian,
+      lsbFirst,
       toLong(self.ui.imageSizeXSliderWidget.value),
       toLong(self.ui.imageSizeYSliderWidget.value),
       toLong(self.ui.imageSizeZSliderWidget.value),
@@ -326,34 +374,72 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     self.reader = vtk.vtkImageReader2()
 
   def updateImage(self, outputVolumeNode, imageFilePath,
-      pixelTypeString, endiannessString, sizeX, sizeY, sizeZ, headerSize, skipSlices,
-      spacingX, spacingY, spacingZ):
+    scalarType, numberOfComponents, bigEndian, lsbFirst, sizeX, sizeY, sizeZ, headerSize, skipSlices,
+    spacingX, spacingY, spacingZ):
     """
     Reads image into output volume
     """
 
-    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
-    sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
-    totalHeaderSize = headerSize + skipSlices * sliceSize
-    import os
-    totalFilesize = os.path.getsize(imageFilePath)
-    voxelDataSize = totalFilesize - totalHeaderSize
-    maxNumberOfSlices = int(voxelDataSize/sliceSize)
-    finalSizeZ = min(sizeZ, maxNumberOfSlices)
+    if scalarType == vtk.VTK_BIT:
+      # Special case: 1bpp input (expanded to 8-bit unsigned char)
+      import os
+      import numpy as np
 
-    self.reader.SetFileName(imageFilePath)
-    self.reader.SetFileDimensionality(3)
-    self.reader.SetDataExtent(0, sizeX-1, 0, sizeY-1, 0, finalSizeZ-1)
-    if endiannessString == "Little endian":
-      self.reader.SetDataByteOrderToLittleEndian()
+      # Compute data sizes in bytes for bit-packed rows/slices
+      bytesPerRow = (sizeX + 7) // 8
+      bytesPerSlice = bytesPerRow * sizeY
+      totalHeaderSize = headerSize + skipSlices * bytesPerSlice
+
+      totalFilesize = os.path.getsize(imageFilePath)
+      voxelDataSize = max(0, totalFilesize - totalHeaderSize)
+      maxNumberOfSlices = int(voxelDataSize // bytesPerSlice)
+      finalSizeZ = int(min(sizeZ, maxNumberOfSlices))
+
+      # Read packed bits for the requested volume
+      with open(imageFilePath, 'rb') as f:
+        f.seek(totalHeaderSize)
+        raw = f.read(bytesPerSlice * finalSizeZ)
+      packed = np.frombuffer(raw, dtype=np.uint8)
+      if packed.size == 0:
+        raise ValueError("No voxel data available at specified header offset/size for 1bpp input")
+
+      # Unpack bits: default MSB-first within each byte. If LSB-first requested, use NumPy's bitorder.
+      if lsbFirst:
+        bitsFlat = np.unpackbits(packed, bitorder='little')
+      else:
+        bitsFlat = np.unpackbits(packed, bitorder='big')
+
+      bits = bitsFlat.reshape(finalSizeZ, sizeY, bytesPerRow, 8)
+      rowBits = bits.reshape(finalSizeZ, sizeY, bytesPerRow * 8)[..., :sizeX]
+      arr8 = (rowBits.astype(np.uint8) * 255)
+
+      # Import into the output volume node
+      slicer.util.updateVolumeFromArray(outputVolumeNode, arr8)
+
     else:
-      self.reader.SetDataByteOrderToBigEndian()
-    self.reader.SetDataScalarType(scalarType)
-    self.reader.SetNumberOfScalarComponents(numberOfComponents)
-    self.reader.SetHeaderSize(totalHeaderSize)
-    self.reader.SetFileLowerLeft(True) # to match input from NRRD reader
-    self.reader.Update()
-    outputVolumeNode.SetImageDataConnection(self.reader.GetOutputPort())
+      # Default path for byte-aligned pixel types
+      sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
+      totalHeaderSize = headerSize + skipSlices * sliceSize
+      import os
+      totalFilesize = os.path.getsize(imageFilePath)
+      voxelDataSize = totalFilesize - totalHeaderSize
+      maxNumberOfSlices = int(voxelDataSize/sliceSize)
+      finalSizeZ = min(sizeZ, maxNumberOfSlices)
+
+      self.reader.SetFileName(imageFilePath)
+      self.reader.SetFileDimensionality(3)
+      self.reader.SetDataExtent(0, sizeX-1, 0, sizeY-1, 0, finalSizeZ-1)
+      if bigEndian:
+        self.reader.SetDataByteOrderToBigEndian()
+      else:
+        self.reader.SetDataByteOrderToLittleEndian()
+      self.reader.SetDataScalarType(scalarType)
+      self.reader.SetNumberOfScalarComponents(numberOfComponents)
+      self.reader.SetHeaderSize(totalHeaderSize)
+      self.reader.SetFileLowerLeft(True) # to match input from NRRD reader
+      self.reader.Update()
+      outputVolumeNode.SetImageDataConnection(self.reader.GetOutputPort())
+
     # We assume file is in LPS and invert first and second axes
     # to get volume in RAS.
     ijkToRas = vtk.vtkMatrix4x4()
@@ -364,7 +450,7 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
     outputVolumeNode.Modified()
 
   def generateImageHeader(self, outputVolumeNode, imageFilePath,
-      pixelTypeString, endiannessString, sizeX, sizeY, sizeZ, headerSize, skipSlices,
+      scalarType, numberOfComponents, bigEndian, lsbFirst, sizeX, sizeY, sizeZ, headerSize, skipSlices,
       spacingX, spacingY, spacingZ, numberOfVolumes=1):
     """
     Reads image into output volume
@@ -372,7 +458,9 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
 
     # Trim sizeZ and numberOfVolumes to maximum available data size (the reader would refuse loading completely
     # if there is not enough voxel data)
-    (scalarType, numberOfComponents) = RawImageGuessLogic.scalarTypeComponentFromString(pixelTypeString)
+    if scalarType == vtk.VTK_BIT:
+      raise RuntimeError("NRRD file format does not support 1bpp images. Read the image and then save as NRRD.")
+
     sliceSize = sizeX * sizeY * vtk.vtkDataArray.GetDataTypeSize(scalarType) * numberOfComponents
     totalHeaderSize = headerSize + skipSlices * sliceSize
     import os
@@ -432,12 +520,7 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
       headerFile.write("sizes: {0}\n".format(sizesStr))
       headerFile.write("space directions: {0}\n".format(spaceDirectionsStr))
       headerFile.write("kinds: {0}\n".format(kindsStr))
-
-      if endiannessString == "Little endian":
-        headerFile.write("endian: little\n")
-      else:
-        headerFile.write("endian: big\n")
-
+      headerFile.write("endian: {0}\n".format("big" if bigEndian else "little"))
       headerFile.write("encoding: raw\n")
       headerFile.write("space origin: (0.0, 0.0, 0.0)\n")
 
@@ -447,22 +530,6 @@ class RawImageGuessLogic(ScriptedLoadableModuleLogic):
 
     return nhdrFilename
 
-  @staticmethod
-  def scalarTypeComponentFromString(scalarTypeStr):
-    if scalarTypeStr == "8 bit unsigned":
-      return (vtk.VTK_UNSIGNED_CHAR, 1)
-    elif scalarTypeStr == "8 bit signed":
-      return (vtk.VTK_SIGNED_CHAR, 1)
-    elif scalarTypeStr == "16 bit unsigned":
-      return (vtk.VTK_UNSIGNED_SHORT, 1)
-    elif scalarTypeStr == "16 bit signed":
-      return (vtk.VTK_SHORT, 1)
-    elif scalarTypeStr == "float":
-      return (vtk.VTK_FLOAT, 1)
-    elif scalarTypeStr == "double":
-      return (vtk.VTK_DOUBLE, 1)
-    elif scalarTypeStr == "24 bit RGB":
-      return (vtk.VTK_UNSIGNED_CHAR, 3)
 
 class RawImageGuessTest(ScriptedLoadableModuleTest):
   """
